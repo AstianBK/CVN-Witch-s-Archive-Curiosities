@@ -13,7 +13,7 @@ public class CVNEntityType {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, CVNWitchArchiveCuriosities.MODID);
 
-    public static final RegistryObject<EntityType<HarpyEntity>> PALO =
+    public static final RegistryObject<EntityType<HarpyEntity>> HARPY =
             ENTITY_TYPES.register("harpy",
                     () -> EntityType.Builder.of(HarpyEntity::new, MobCategory.MONSTER)
                             .sized(0.60f, 1.0f)

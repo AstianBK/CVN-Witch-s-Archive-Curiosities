@@ -1,5 +1,6 @@
 package com.TBK.WitchArchive.client.renderer;
 
+import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
 import com.TBK.WitchArchive.client.model.HarpyModel;
 import com.TBK.WitchArchive.common.entity.HarpyEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -13,6 +14,6 @@ public class HarpyRenderer <T extends HarpyEntity,M extends HarpyModel<T>> exten
 
     @Override
     public ResourceLocation getTextureLocation(T p_114482_) {
-        return null;
+        return new ResourceLocation(CVNWitchArchiveCuriosities.MODID,"texture/entity/harpy/harpy.png");
     }
 }
