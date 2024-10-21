@@ -1,5 +1,6 @@
 package com.TBK.WitchArchive;
 
+import com.TBK.WitchArchive.client.renderer.FeatherRenderer;
 import com.TBK.WitchArchive.client.renderer.HarpyRenderer;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import com.mojang.logging.LogUtils;
@@ -40,6 +41,7 @@ public class CVNWitchArchiveCuriosities
 
     @OnlyIn(Dist.CLIENT)
     public void registerRenderers(FMLCommonSetupEvent event){
+        EntityRenderers.register(CVNEntityType.FEATHER_PROJECTILE.get(), FeatherRenderer::new);
         EntityRenderers.register(CVNEntityType.HARPY.get(), HarpyRenderer::new);
     }
 

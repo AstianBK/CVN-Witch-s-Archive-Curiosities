@@ -291,14 +291,14 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                 } else {
                     if (d0 < 9.0D) {
                         Vec3 vec3 = livingentity.getEyePosition();
-                        HarpyEntity.this.moveControl.setWantedPosition(vec3.x, vec3.y+4.0D, vec3.z, 1.0D);
+                        HarpyEntity.this.moveControl.setWantedPosition(vec3.x, vec3.y, vec3.z, 1.0D);
                     }else{
                         HarpyEntity.this.getNavigation().stop();
                     }
                 }
                 if (attackMelee == AttackMelee.RANGED && this.attackCooldown==0){
                     this.attackCooldown = this.adjustedTickDelay(20);
-                    Arrow abstractarrow =new Arrow(HarpyEntity.this.level(),HarpyEntity.this);
+                    FeatherProjectile abstractarrow =new FeatherProjectile(HarpyEntity.this.level(),HarpyEntity.this);
                     double d4 = livingentity.getX() - HarpyEntity.this.getX();
                     double d1 = livingentity.getY(0.3333333333333333D) - abstractarrow.getY();
                     double d2 = livingentity.getZ() - HarpyEntity.this.getZ();
