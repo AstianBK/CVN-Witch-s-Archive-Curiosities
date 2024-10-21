@@ -16,7 +16,7 @@ public class CVNEntityType {
     public static final RegistryObject<EntityType<HarpyEntity>> HARPY =
             ENTITY_TYPES.register("harpy",
                     () -> EntityType.Builder.of(HarpyEntity::new, MobCategory.MONSTER)
-                            .sized(0.60f, 1.0f)
+                            .sized(0.60f, 2.0f)
                             .build(new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "harpy").toString()));
 
 }

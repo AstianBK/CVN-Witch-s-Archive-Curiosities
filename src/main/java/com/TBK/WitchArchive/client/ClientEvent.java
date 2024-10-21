@@ -1,6 +1,7 @@
 package com.TBK.WitchArchive.client;
 
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
+import com.TBK.WitchArchive.client.model.HarpyModel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -16,7 +17,7 @@ public class ClientEvent {
 
     @SubscribeEvent
     public static void registerLayerDefinition(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        //event.registerLayerDefinition(CustomModel.LAYER_LOCATION,CustomModel::createBodyLayer);
+        event.registerLayerDefinition(HarpyModel.LAYER_LOCATION,HarpyModel::createBodyLayer);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
