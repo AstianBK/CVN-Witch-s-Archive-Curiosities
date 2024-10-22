@@ -9,11 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 
 public class HarpyRenderer <T extends HarpyEntity,M extends HarpyModel<T>> extends MobRenderer<T,M> {
     public HarpyRenderer(EntityRendererProvider.Context p_174304_) {
-        super(p_174304_, (M) new HarpyModel<>(), 0.0F);
+        super(p_174304_, (M) new HarpyModel<>(p_174304_.bakeLayer(HarpyModel.LAYER_LOCATION)), 0.0F);
     }
 
     @Override
     public ResourceLocation getTextureLocation(T p_114482_) {
-        return new ResourceLocation(CVNWitchArchiveCuriosities.MODID,"texture/entity/harpy/harpy.png");
+        return new ResourceLocation(CVNWitchArchiveCuriosities.MODID,"textures/entity/harpy/harpy.png");
     }
 }
