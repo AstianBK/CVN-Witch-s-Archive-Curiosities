@@ -2,6 +2,8 @@ package com.TBK.WitchArchive.common.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -9,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -30,17 +33,22 @@ import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.entity.animal.FlyingAnimal;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.Tags;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 
 public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
@@ -48,6 +56,10 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     public final AnimationState attackRange=new AnimationState();
     public final AnimationState sitting=new AnimationState();
     public final AnimationState idle=new AnimationState();
+    private static final EntityDataAccessor<Integer> DATA_COLOR =
+            SynchedEntityData.defineId(HarpyEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_SKIN =
+            SynchedEntityData.defineId(HarpyEntity.class, EntityDataSerializers.INT);
 
     protected static final EntityDataAccessor<Byte> DATA_FLAGS_ID = SynchedEntityData.defineId(HarpyEntity.class,
             EntityDataSerializers.BYTE);
@@ -122,13 +134,41 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         }else this.setPatrolling(this.isSitting());
     }
 
+    public DyeColor getColor() {
+        return DyeColor.byId(this.entityData.get(DATA_COLOR));
+    }
+
+    public void setColor(DyeColor pcolor) {
+        this.entityData.set(DATA_COLOR, pcolor.getId());
+    }
+
     @Override
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
         ItemStack stack=p_27584_.getItemInHand(p_27585_);
-        if(stack.isEmpty()){
+        if(stack.getItem() instanceof DyeItem item){
+            this.setColor(item.getDyeColor());
+        }else if(stack.is(Tags.Items.SEEDS)){
+            this.tame(p_27584_);
+            if(!this.level().isClientSide){
+                this.level().broadcastEntityEvent(this,(byte) 7);
+
+            }
+        }else if(stack.isEmpty()){
             this.chargeState();
+            if(p_27584_.level().isClientSide){
+                p_27584_.displayClientMessage(Component.translatable("harpy."+this.getIdState()),true);
+            }
         }
         return super.mobInteract(p_27584_, p_27585_);
+    }
+    public int getIdState(){
+        if(this.isSitting()){
+            return 2;
+        }else if(this.isPatrolling()){
+            return 1;
+        }else {
+            return 0;
+        }
     }
 
     @Nullable
@@ -158,6 +198,8 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         if (this.idleAnimationTimeout <= 0) {
             this.idleAnimationTimeout = 24;
             this.idle.start(this.tickCount);
+            this.attackMelee.stop();
+            this.attackRange.stop();
         } else {
             --this.idleAnimationTimeout;
         }
@@ -172,30 +214,33 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> p_146754_) {
         super.onSyncedDataUpdated(p_146754_);
-
+        if(p_146754_.equals(DATA_FLAGS_ID) && this.isSitting()){
+            this.sitting.start(this.tickCount);
+        }
     }
 
     @Override
     public void handleEntityEvent(byte p_21807_) {
         if(p_21807_==4){
             this.attackMelee.start(this.tickCount);
+            this.idle.stop();
+            this.idleAnimationTimeout=24;
+            System.out.print("\nUso Animacion de ataque\n");
         }else if(p_21807_==62){
             this.attackRange.start(this.tickCount);
+            this.idle.stop();
+            this.idleAnimationTimeout=24;
+            System.out.print("\nUso Animacion de ataque a distancia\n");
+
         }else {
             super.handleEntityEvent(p_21807_);
         }
     }
 
-    public boolean isCharging() {
-        return this.getSoulEaterEntityFlag(1);
-    }
     public boolean isSitting(){
         return this.getSoulEaterEntityFlag(2);
     }
 
-    public void setIsCharging(boolean pCharging) {
-        this.setSoulEaterEntityFlag(1, pCharging);
-    }
     public void setSitting(boolean pIsSitting){
         this.setSoulEaterEntityFlag(2,pIsSitting);
     }
@@ -203,6 +248,12 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         return this.getSoulEaterEntityFlag(4);
     }
 
+    public boolean isCharging(){
+        return this.getSoulEaterEntityFlag(1);
+    }
+    public void setIsCharging(boolean isCharging){
+        this.setSoulEaterEntityFlag(1,isCharging);
+    }
     public void setPatrolling(boolean patrolling){
         this.setSoulEaterEntityFlag(4,patrolling);
         if(patrolling){
@@ -210,28 +261,62 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         }
     }
 
+    public int getIdSkin() {
+        return this.entityData.get(DATA_SKIN);
+    }
+
+    public Skin getSkin() {
+        return Skin.byId(this.getIdSkin() & 255);
+    }
+
+    public void setIdSkin(int pId) {
+        this.entityData.set(DATA_SKIN, pId);
+    }
+
+
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_FLAGS_ID, (byte)0);
+        this.entityData.define(DATA_COLOR,-1);
+        this.entityData.define(DATA_SKIN,-1);
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag p_21819_) {
+        super.addAdditionalSaveData(p_21819_);
+        p_21819_.putInt("color",this.getColor().getId());
+        p_21819_.putInt("skin",this.getIdSkin());
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag p_21815_) {
+        super.readAdditionalSaveData(p_21815_);
+        this.setColor(DyeColor.byId(p_21815_.getInt("color")));
+        this.setIdSkin(p_21815_.getInt("skin"));
     }
 
     @Override
     public boolean isFlying() {
-        return this.onGround();
+        return !this.onGround();
+    }
+
+    @Override
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor p_146746_, DifficultyInstance p_146747_, MobSpawnType p_146748_, @Nullable SpawnGroupData p_146749_, @Nullable CompoundTag p_146750_) {
+        DyeColor color=DyeColor.values()[this.level().random.nextInt(0,15)];
+        this.setColor(color!=null ? color : DyeColor.BLUE);
+        this.setIdSkin(this.random.nextInt(0,3));
+        return super.finalizeSpawn(p_146746_, p_146747_, p_146748_, p_146749_, p_146750_);
     }
 
     class HarpyEntityChargeAttackGoal extends Goal {
         private int attackCooldown=0;
-
+        private AttackMelee lastStrat=AttackMelee.MELEE;
+        private int stratTime=0;
         public HarpyEntityChargeAttackGoal() {
             this.setFlags(EnumSet.of(Goal.Flag.MOVE));
         }
 
-        /**
-         * Returns whether execution should begin. You can also read and cache any state necessary for execution in this
-         * method as well.
-         */
         public boolean canUse() {
             LivingEntity livingentity = HarpyEntity.this.getTarget();
             if (livingentity != null && livingentity.isAlive() && !HarpyEntity.this.getMoveControl().hasWanted()) {
@@ -241,63 +326,60 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             }
         }
 
-        /**
-         * Returns whether an in-progress EntityAIBase should continue executing
-         */
+
         public boolean canContinueToUse() {
             return HarpyEntity.this.getMoveControl().hasWanted() && HarpyEntity.this.isCharging() && HarpyEntity.this.getTarget() != null && HarpyEntity.this.getTarget().isAlive();
         }
 
-        /**
-         * Execute a one shot task or start executing a continuous task
-         */
         public void start() {
             this.attackCooldown=0;
+            this.stratTime=0;
+            this.lastStrat=AttackMelee.MELEE;
             LivingEntity livingentity = HarpyEntity.this.getTarget();
             if (livingentity != null) {
                 Vec3 vec3 = livingentity.getEyePosition();
-                HarpyEntity.this.moveControl.setWantedPosition(vec3.x, vec3.y, vec3.z, 1.0D);
+                HarpyEntity.this.moveControl.setWantedPosition(position().x, vec3.y+3.0D, position().z, 1.0D);
             }
-
-            HarpyEntity.this.setIsCharging(true);
             HarpyEntity.this.playSound(SoundEvents.VEX_CHARGE, 1.0F, 1.0F);
         }
 
-        /**
-         * Reset the task's internal state. Called when this task is interrupted by another one
-         */
+
         public void stop() {
-            HarpyEntity.this.setIsCharging(false);
+
         }
 
         public boolean requiresUpdateEveryTick() {
             return true;
         }
 
-        /**
-         * Keep ticking a continuous task that has already been started
-         */
+
         public void tick() {
             LivingEntity livingentity = HarpyEntity.this.getTarget();
             if (livingentity != null) {
                 double d0 = HarpyEntity.this.distanceToSqr(livingentity);
-                AttackMelee attackMelee =  d0 > 9.0D ? AttackMelee.RANGED : AttackMelee.MELEE;
-                if (HarpyEntity.this.getBoundingBox().intersects(livingentity.getBoundingBox()) && attackMelee == AttackMelee.MELEE) {
+                AttackMelee attackMelee=this.lastStrat;
+                if(this.stratTime<=0){
+                    this.stratTime=this.adjustedTickDelay(100);
+                    this.lastStrat=this.lastStrat==AttackMelee.MELEE ? AttackMelee.RANGED : AttackMelee.MELEE;
+                }
+                if (d0<2 && attackMelee == AttackMelee.MELEE) {
                     HarpyEntity.this.doHurtTarget(livingentity);
                     if(!HarpyEntity.this.level().isClientSide){
                         HarpyEntity.this.level().broadcastEntityEvent(HarpyEntity.this,(byte) 4);
                     }
-                    HarpyEntity.this.setIsCharging(false);
                 } else {
-                    if (d0 < 9.0D) {
-                        Vec3 vec3 = livingentity.getEyePosition();
+                    Vec3 vec3 = livingentity.getPosition(1.0F);
+                    if (attackMelee==AttackMelee.MELEE) {
                         HarpyEntity.this.moveControl.setWantedPosition(vec3.x, vec3.y, vec3.z, 1.0D);
-                    }else{
-                        HarpyEntity.this.getNavigation().stop();
+                    }else {
+                       //HarpyEntity.this.getNavigation().stop();
                     }
                 }
                 if (attackMelee == AttackMelee.RANGED && this.attackCooldown==0){
                     this.attackCooldown = this.adjustedTickDelay(20);
+                    if(!HarpyEntity.this.level().isClientSide){
+                        HarpyEntity.this.level().broadcastEntityEvent(HarpyEntity.this,(byte)62);
+                    }
                     FeatherProjectile abstractarrow =new FeatherProjectile(HarpyEntity.this.level(),HarpyEntity.this);
                     double d4 = livingentity.getX() - HarpyEntity.this.getX();
                     double d1 = livingentity.getY(0.3333333333333333D) - abstractarrow.getY();
@@ -308,6 +390,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                     HarpyEntity.this.level().addFreshEntity(abstractarrow);
                 }
                 this.attackCooldown=Math.max(this.attackCooldown - 1, 0);
+                this.stratTime=Math.max(this.stratTime-1,0);
             }
         }
 
@@ -343,37 +426,6 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         }
     }
 
-    class HarpyEntityMoveControl extends MoveControl {
-        public HarpyEntityMoveControl(HarpyEntity p_34062_) {
-            super(p_34062_);
-        }
-
-        public void tick() {
-            if (this.operation == MoveControl.Operation.MOVE_TO) {
-                Vec3 vec3 = new Vec3(this.wantedX - HarpyEntity.this.getX(), this.wantedY - HarpyEntity.this.getY(), this.wantedZ - HarpyEntity.this.getZ());
-                double d0 = vec3.length();
-                if (d0 < HarpyEntity.this.getBoundingBox().getSize()) {
-                    this.operation = MoveControl.Operation.WAIT;
-                    HarpyEntity.this.setDeltaMovement(HarpyEntity.this.getDeltaMovement().scale(0.5D));
-                } else {
-                    HarpyEntity.this.setDeltaMovement(HarpyEntity.this.getDeltaMovement().add(vec3.scale(this.speedModifier * 0.05D / d0)));
-                    if (HarpyEntity.this.getTarget() == null) {
-                        Vec3 vec31 = HarpyEntity.this.getDeltaMovement();
-                        HarpyEntity.this.setYRot(-((float) Mth.atan2(vec31.x, vec31.z)) * (180F / (float)Math.PI));
-                        HarpyEntity.this.yBodyRot = HarpyEntity.this.getYRot();
-                    } else {
-                        double d2 = HarpyEntity.this.getTarget().getX() - HarpyEntity.this.getX();
-                        double d1 = HarpyEntity.this.getTarget().getZ() - HarpyEntity.this.getZ();
-                        HarpyEntity.this.setYRot(-((float)Mth.atan2(d2, d1)) * (180F / (float)Math.PI));
-                        HarpyEntity.this.yBodyRot = HarpyEntity.this.getYRot();
-                    }
-                }
-
-            }else {
-                HarpyEntity.this.getNavigation().stop();
-            }
-        }
-    }
 
     class HarpyEntityRandomMoveGoal extends Goal {
         public HarpyEntityRandomMoveGoal() {
@@ -585,7 +637,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                     this.mob.setNoGravity(true);
                     Vec3 vec3 = new Vec3(this.wantedX - HarpyEntity.this.getX(), this.wantedY - HarpyEntity.this.getY(), this.wantedZ - HarpyEntity.this.getZ());
                     double d0 = vec3.length();
-                    if (d0 < HarpyEntity.this.getBoundingBox().getSize()) {
+                    if (d0 < HarpyEntity.this.getBoundingBox().getSize()/2.0D) {
                         this.operation = MoveControl.Operation.WAIT;
                         HarpyEntity.this.setDeltaMovement(HarpyEntity.this.getDeltaMovement().scale(0.5D));
                     } else {
@@ -602,8 +654,6 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                         }
                     }
 
-                }else {
-                    HarpyEntity.this.getNavigation().stop();
                 }
             }
 
@@ -651,6 +701,25 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             }
 
             return null;
+        }
+    }
+
+    public enum Skin{
+        VARIANT_1(0),
+        VARIANT_2(1),
+        VARIANT_3(2);
+        private static final Skin[] BY_ID = Arrays.stream(values()).sorted(Comparator.comparingInt(Skin::getId)).toArray(Skin[]::new);
+
+        private final int id;
+        Skin(int id){
+            this.id=id;
+        }
+
+        public int getId() {
+            return this.id;
+        }
+        public static Skin byId(int p_30987_) {
+            return BY_ID[p_30987_ % BY_ID.length];
         }
     }
 }
