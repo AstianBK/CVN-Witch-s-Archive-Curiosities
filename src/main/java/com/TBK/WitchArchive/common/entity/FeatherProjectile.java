@@ -1,6 +1,7 @@
 package com.TBK.WitchArchive.common.entity;
 
 import com.TBK.WitchArchive.common.register.CVNEntityType;
+import com.TBK.WitchArchive.common.register.CVNItems;
 import com.google.common.collect.Sets;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -30,12 +31,12 @@ public class FeatherProjectile extends AbstractArrow implements ItemSupplier {
 
     @Override
     protected void onHitEntity(EntityHitResult pResult) {
-        super.onHitEntity(pResult);
-        if(pResult.getEntity() instanceof LivingEntity living){
+        if(pResult.getEntity() instanceof LivingEntity living && !(living instanceof HarpyEntity)){
             living.invulnerableTime = 0;
             living.hurt(damageSources().arrow(this,this.getOwner()),8.0F);
             living.invulnerableTime = 0;
         }
+        this.discard();
     }
 
     @Override
@@ -76,11 +77,11 @@ public class FeatherProjectile extends AbstractArrow implements ItemSupplier {
 
     @Override
     protected @NotNull ItemStack getPickupItem() {
-        return ItemStack.EMPTY;//new ItemStack(.SCROUNGER_FEATHER.get()) ;
+        return new ItemStack(CVNItems.HARPY_FEATHER.get());
     }
 
     @Override
     public @NotNull ItemStack getItem() {
-        return  ItemStack.EMPTY;//new ItemStack(ModItems.SCROUNGER_FEATHER.get());
+        return new ItemStack(CVNItems.HARPY_FEATHER.get());
     }
 }

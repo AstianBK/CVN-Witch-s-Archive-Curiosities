@@ -3,6 +3,7 @@ package com.TBK.WitchArchive;
 import com.TBK.WitchArchive.client.renderer.FeatherRenderer;
 import com.TBK.WitchArchive.client.renderer.HarpyRenderer;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
+import com.TBK.WitchArchive.common.register.CVNItems;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,6 +30,7 @@ public class CVNWitchArchiveCuriosities
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         MinecraftForge.EVENT_BUS.register(this);
+        CVNItems.ITEMS.register(modEventBus);
         CVNEntityType.ENTITY_TYPES.register(modEventBus);
 
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT,()->()->{
