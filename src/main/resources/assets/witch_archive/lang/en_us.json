@@ -1,5 +1,11 @@
 {
-  "harpy.0": "Follow",
-  "harpy.1": "Patrolling",
-  "harpy.2": "Sitting"
+  "harpy.0": "Following",
+  "harpy.1": "Wandering",
+  "harpy.2": "Sitting",
+
+
+
+  "items.witch_archive.golden_wheat_seeds": "Golden Wheat Seeds",
+  "items.witch_archive.harpy_feather": "Harpy Feather",
+  "items.witch_archive.harpy_spawn_egg": "Harpy Spawn Egg"
 }
