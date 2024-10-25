@@ -169,10 +169,15 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		this.applyHeadRotation(entity,netHeadYaw,headPitch,ageInTicks);
 		this.animateWalk(HarpyAnimations.WINGS_AGRESSIVE,limbSwing,limbSwingAmount,1.0F,1.0F);
 		this.animate(entity.sitting,HarpyAnimations.SIT,ageInTicks);
-		this.animate(entity.idle,entity.isFlying() ? HarpyAnimations.WING_FLY : HarpyAnimations.WINGS_NO_ANIM,ageInTicks);
+		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.WING_FLY : HarpyAnimations.WINGS_NO_ANIM,ageInTicks);
 		this.animate(entity.idle,HarpyAnimations.IDLE_FLY,ageInTicks);
 		this.animate(entity.attackRange,HarpyAnimations.RANGED,ageInTicks);
 		this.animate(entity.attackMelee,HarpyAnimations.MELEE,ageInTicks);
+		if(entity.isSitting()){
+			this.main.y=15F;
+		}else {
+			this.main.y=0.0F;
+		}
 	}
 
 	private void applyHeadRotation(T p_250436_, float p_249176_, float p_251814_, float p_248796_) {

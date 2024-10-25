@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "witch_archive:item/golden_wheat_seeds"
+  }
+}
