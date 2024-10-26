@@ -1,6 +1,7 @@
 package com.TBK.WitchArchive.common.register;
 
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
+import com.TBK.WitchArchive.common.entity.ElderHarpyEntity;
 import com.TBK.WitchArchive.common.entity.FeatherProjectile;
 import com.TBK.WitchArchive.common.entity.HarpyEntity;
 import net.minecraft.resources.ResourceLocation;
@@ -19,6 +20,12 @@ public class CVNEntityType {
                     () -> EntityType.Builder.of(HarpyEntity::new, MobCategory.MONSTER)
                             .sized(0.60f, 2.0f)
                             .build(new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "harpy").toString()));
+
+    public static final RegistryObject<EntityType<ElderHarpyEntity>> ELDER_HARPY =
+            ENTITY_TYPES.register("elder_harpy",
+                    () -> EntityType.Builder.of(ElderHarpyEntity::new, MobCategory.MONSTER)
+                            .sized(0.60f, 2.0f)
+                            .build(new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "elder_harpy").toString()));
 
     public static final RegistryObject<EntityType<FeatherProjectile>> FEATHER_PROJECTILE = ENTITY_TYPES
             .register("feather_projectile", () -> EntityType.Builder.<FeatherProjectile>of(FeatherProjectile::new, MobCategory.MISC)

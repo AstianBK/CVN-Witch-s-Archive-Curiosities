@@ -1,6 +1,7 @@
 package com.TBK.WitchArchive.server;
 
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
+import com.TBK.WitchArchive.common.entity.ElderHarpyEntity;
 import com.TBK.WitchArchive.common.entity.HarpyEntity;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import net.minecraft.world.entity.Mob;
@@ -17,7 +18,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 public class ModEvent {
     @SubscribeEvent
     public static void registerAttribute(EntityAttributeCreationEvent event) {
-
+        event.put(CVNEntityType.ELDER_HARPY.get(), ElderHarpyEntity.setAttributes());
         event.put(CVNEntityType.HARPY.get(), HarpyEntity.setAttributes());
     }
 

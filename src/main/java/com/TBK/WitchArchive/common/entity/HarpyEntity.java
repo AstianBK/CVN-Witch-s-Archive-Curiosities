@@ -1,5 +1,6 @@
 package com.TBK.WitchArchive.common.entity;
 
+import com.TBK.WitchArchive.common.register.CVNEntityType;
 import com.TBK.WitchArchive.common.register.CVNItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -40,6 +41,7 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.Tags;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -84,6 +86,11 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     }
 
     @Override
+    public boolean isFood(ItemStack p_27600_) {
+        return p_27600_.is(CVNItems.GOLDEN_WHEAT_SEEDS.get());
+    }
+
+    @Override
     public void tick() {
         super.tick();
         if(this.level().isClientSide){
@@ -105,19 +112,20 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         super.registerGoals();
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new HarpyAttack(this,0.25, 8.0, 20, 4, 10));
-        this.goalSelector.addGoal(3, new HarpyFlyGoal(this, 0.5, 5, 8));
+        this.goalSelector.addGoal(1, new HarpyFlyGoal(this, 0.5, 5, 8));
+        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
         this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 2.0D, 5.0F, 1.0F, true){
             @Override
             public boolean canUse() {
                 return super.canUse() && HarpyEntity.this.isFollowing();
             }
         });
-        this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new OwnerHurtTargetGoal(this));
+        this.targetSelector.addGoal(2, new OwnerHurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 3.0F, 1.0F));
         this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Mob.class, 8.0F));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Husk.class, true));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Husk.class, true));
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Player.class, true));
     }
     protected void updateWalkAnimation(float p_268362_) {
         float f;
@@ -157,10 +165,12 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     }
 
 
+
+
     @Override
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
         ItemStack stack=p_27584_.getItemInHand(p_27585_);
-        if(stack.is(CVNItems.GOLDEN_WHEAT_SEEDS.get()) && !this.isTame()){
+        if(stack.is(Tags.Items.SEEDS) && !this.isTame()){
             this.tame(p_27584_);
             if(!this.level().isClientSide){
                 this.level().broadcastEntityEvent(this,(byte) 7);
@@ -188,7 +198,11 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Nullable
     @Override
     public AgeableMob getBreedOffspring(ServerLevel p_146743_, AgeableMob p_146744_) {
-        return null;
+        HarpyEntity harpy=new HarpyEntity(CVNEntityType.HARPY.get(),this.level());
+        if(this.isTame()){
+            harpy.tame((Player) this.getOwner());
+        }
+        return harpy;
     }
 
     private boolean getSoulEaterEntityFlag(int pMask) {
@@ -294,6 +308,9 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void addAdditionalSaveData(CompoundTag p_21819_) {
         super.addAdditionalSaveData(p_21819_);
+        p_21819_.putBoolean("isFollowing",this.isFollowing());
+        p_21819_.putBoolean("isPatrolling",this.isPatrolling());
+        p_21819_.putBoolean("isSitting",this.isSitting());
         p_21819_.putInt("color",this.getColor().getId());
         p_21819_.putInt("skin",this.getIdSkin());
     }
@@ -301,6 +318,9 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void readAdditionalSaveData(CompoundTag p_21815_) {
         super.readAdditionalSaveData(p_21815_);
+        this.setIsFollowing(p_21815_.getBoolean("isFollowing"));
+        this.setSitting(p_21815_.getBoolean("isSitting"));
+        this.setPatrolling(p_21815_.getBoolean("isPatrolling"));
         this.setColor(DyeColor.byId(p_21815_.getInt("color")));
         this.setIdSkin(p_21815_.getInt("skin"));
     }
