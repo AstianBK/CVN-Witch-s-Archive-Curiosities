@@ -57,8 +57,8 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     private static final EntityDataAccessor<Integer> DATA_SKIN =
             SynchedEntityData.defineId(HarpyEntity.class, EntityDataSerializers.INT);
 
-    protected static final EntityDataAccessor<Byte> DATA_FLAGS_ID = SynchedEntityData.defineId(HarpyEntity.class,
-            EntityDataSerializers.BYTE);
+    protected static final EntityDataAccessor<Integer> DATA_FLAGS_ID = SynchedEntityData.defineId(HarpyEntity.class,
+            EntityDataSerializers.INT);
     private int idleAnimationTimeout;
 
     public HarpyEntity(EntityType<? extends TamableAnimal> p_21803_, Level p_21804_) {
@@ -79,7 +79,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                 .add(Attributes.MAX_HEALTH, 9.0D)
                 .add(Attributes.FOLLOW_RANGE, 45.D)
                 .add(Attributes.MOVEMENT_SPEED, 0.2d)
-                .add(Attributes.FLYING_SPEED,0.5D)
+                .add(Attributes.FLYING_SPEED,0.25D)
                 .add(Attributes.ATTACK_DAMAGE,5.0D)
                 .build();
 
@@ -110,14 +110,19 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
     protected void registerGoals() {
         super.registerGoals();
-        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(9, new FloatGoal(this));
         this.goalSelector.addGoal(2, new HarpyAttack(this,0.25, 8.0, 20, 4, 10));
-        this.goalSelector.addGoal(1, new HarpyFlyGoal(this, 0.5, 5, 8));
-        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
+        this.goalSelector.addGoal(4, new HarpyFlyGoal(this, 0.25, 3, 6));
+        this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D){
+            @Override
+            public boolean canUse() {
+                return super.canUse() && !HarpyEntity.this.isPatrolling() && !HarpyEntity.this.isPatrolling() && HarpyEntity.this.isFollowing();
+            }
+        });
         this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 2.0D, 5.0F, 1.0F, true){
             @Override
             public boolean canUse() {
-                return super.canUse() && HarpyEntity.this.isFollowing();
+                return super.canUse() && !HarpyEntity.this.isPatrolling() && !HarpyEntity.this.isPatrolling() && HarpyEntity.this.isFollowing();
             }
         });
         this.targetSelector.addGoal(2, new OwnerHurtByTargetGoal(this));
@@ -144,16 +149,13 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     }
 
     public void chargeState(){
-        if(this.isPatrolling()){
-            this.setSitting(true);
-            this.setPatrolling(false);
-        }else if(this.isSitting()){
-            this.setIsFollowing(true);
-            this.setSitting(false);
+        int value=this.getSoulEaterEntityFlag();
+        if (value < 2) {
+            value++;
         }else {
-            this.setPatrolling(true);
-            this.setIsFollowing(false);
+            value=0;
         }
+        this.setSoulEaterEntityFlag(value);
     }
 
     public DyeColor getColor() {
@@ -163,8 +165,6 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     public void setColor(DyeColor pcolor) {
         this.entityData.set(DATA_COLOR, pcolor.getId());
     }
-
-
 
 
     @Override
@@ -177,7 +177,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             }
         }else if(stack.getItem() instanceof DyeItem item){
             this.setColor(item.getDyeColor());
-        }else if(stack.isEmpty() && this.isTame()){
+        }else if(stack.isEmpty() && this.isTame() && this.isOwnedBy(p_27584_)){
             this.chargeState();
             if(p_27584_.level().isClientSide){
                 p_27584_.displayClientMessage(Component.translatable("harpy."+this.getIdState()),true);
@@ -205,20 +205,12 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         return harpy;
     }
 
-    private boolean getSoulEaterEntityFlag(int pMask) {
-        int i = this.entityData.get(DATA_FLAGS_ID);
-        return (i & pMask) != 0;
+    private int getSoulEaterEntityFlag() {
+        return this.entityData.get(DATA_FLAGS_ID);
     }
 
-    private void setSoulEaterEntityFlag(int pMask, boolean pValue) {
-        int i = this.entityData.get(DATA_FLAGS_ID);
-        if (pValue) {
-            i |= pMask;
-        } else {
-            i &= ~pMask;
-        }
-
-        this.entityData.set(DATA_FLAGS_ID, (byte)(i & 255));
+    private void setSoulEaterEntityFlag(int pMask) {
+        this.entityData.set(DATA_FLAGS_ID, pMask);
     }
 
 
@@ -265,23 +257,10 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     }
 
     public boolean isSitting(){
-        return this.getSoulEaterEntityFlag(2);
-    }
-
-    public void setSitting(boolean pIsSitting){
-        this.setSoulEaterEntityFlag(2,pIsSitting);
-        if(pIsSitting){
-            double y=this.level().getHeight(Heightmap.Types.MOTION_BLOCKING, (int) this.getX(), (int) this.getZ());
-            this.setPos(this.getX(),y,this.getZ());
-        }
+        return this.getSoulEaterEntityFlag()==2;
     }
     public boolean isPatrolling(){
-        return this.getSoulEaterEntityFlag(4);
-    }
-
-
-    public void setPatrolling(boolean patrolling){
-        this.setSoulEaterEntityFlag(4,patrolling);
+        return this.getSoulEaterEntityFlag()==1;
     }
 
     public int getIdSkin() {
@@ -300,7 +279,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        this.entityData.define(DATA_FLAGS_ID, (byte)0);
+        this.entityData.define(DATA_FLAGS_ID, 1);
         this.entityData.define(DATA_COLOR,-1);
         this.entityData.define(DATA_SKIN,-1);
     }
@@ -308,9 +287,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void addAdditionalSaveData(CompoundTag p_21819_) {
         super.addAdditionalSaveData(p_21819_);
-        p_21819_.putBoolean("isFollowing",this.isFollowing());
-        p_21819_.putBoolean("isPatrolling",this.isPatrolling());
-        p_21819_.putBoolean("isSitting",this.isSitting());
+        p_21819_.putInt("state",this.getSoulEaterEntityFlag());
         p_21819_.putInt("color",this.getColor().getId());
         p_21819_.putInt("skin",this.getIdSkin());
     }
@@ -318,19 +295,13 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void readAdditionalSaveData(CompoundTag p_21815_) {
         super.readAdditionalSaveData(p_21815_);
-        this.setIsFollowing(p_21815_.getBoolean("isFollowing"));
-        this.setSitting(p_21815_.getBoolean("isSitting"));
-        this.setPatrolling(p_21815_.getBoolean("isPatrolling"));
+        this.setSoulEaterEntityFlag(p_21815_.getInt("state"));
         this.setColor(DyeColor.byId(p_21815_.getInt("color")));
         this.setIdSkin(p_21815_.getInt("skin"));
     }
 
     public boolean isFollowing(){
-        return this.getSoulEaterEntityFlag(1);
-    }
-
-    public void setIsFollowing(boolean isFollowing){
-        this.setSoulEaterEntityFlag(1, isFollowing);
+        return this.getSoulEaterEntityFlag()==0;
     }
 
     @Override
@@ -373,7 +344,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
         public boolean canUse() {
             LivingEntity potentialTarget = this.harpy.getTarget();
-            return potentialTarget != null && potentialTarget.isAlive();
+            return potentialTarget != null && potentialTarget.isAlive() && !this.harpy.isSitting();
         }
 
         public void start() {
@@ -492,6 +463,8 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         private final int minAltitude;
         private final int maxAltitude;
         private Vec3 targetPos;
+        private final double targetThreshold = 1.5;
+
         private int idleTime = 0;
         private boolean isIdle = false;
 
@@ -503,118 +476,90 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             this.setFlags(EnumSet.of(Flag.MOVE));
         }
 
-        public boolean canUse() {
-            return !this.isIdle && !this.harpy.isSitting();
+        public boolean canUse() { // method_6264
+            return this.harpy.isAlive() && !this.isIdle && this.harpy.isPatrolling();
         }
 
-        public void start() {
+        // Método principal de vuelo de la harpy
+        public void start() { // method_6269
             if (!this.isIdle) {
-                label31: {
-                    if (this.targetPos != null) {
-                        double d0 = this.harpy.position().distanceTo(this.targetPos);
-                        if (!(d0 < 1.5)) {
-                            break label31;
+                if (this.targetPos != null) {
+                    if (this.harpy.position().distanceTo(this.targetPos) < targetThreshold) {
+                        this.targetPos = getRandomAirPosition();
+                        if (this.targetPos == null || this.harpy.getRandom().nextFloat() < 0.4) {
+                            this.enterIdleMode();
+                            return;
                         }
-                    }
-
-                    this.targetPos = this.getRandomAirPosition();
-                    if (this.targetPos == null || (double)this.harpy.getDeltaMovement().length() < 0.4) {
-                        this.enterIdleMode();
-                        return;
                     }
                 }
 
                 if (this.targetPos != null) {
                     Vec3 direction = this.targetPos.subtract(this.harpy.position()).normalize().scale(this.speed);
                     this.harpy.setDeltaMovement(direction);
-                    this.harpy.lookControl.setLookAt(this.targetPos.x, this.targetPos.y, this.targetPos.z);
+                    this.harpy.getLookControl().setLookAt(this.targetPos.x, this.targetPos.y, this.targetPos.z);
                     this.rotateTowardsTarget();
                 }
-
             }
         }
 
-
-        public boolean canContinueToUse() {
+        // Método que verifica si la harpy debe continuar volando o detenerse
+        public boolean canContinueToUse() { // method_6266
             if (this.isIdle) {
                 return this.idleTime > 0;
             } else {
-                boolean var1;
-                label36: {
-                    if (!this.harpy.navigation.isDone()) {
-                        if (this.targetPos == null) {
-                            break label36;
-                        }
-
-                        double d0 = this.harpy.position().distanceTo(this.targetPos);
-                        Objects.requireNonNull(this);
-                        if (d0 >= 1.5) {
-                            break label36;
-                        }
+                if (!this.harpy.isAlive()) {
+                    if (this.targetPos == null || this.harpy.position().distanceTo(this.targetPos) >= targetThreshold) {
+                        return false;
                     }
-
-                    var1 = false;
-                    return var1;
                 }
-
-                var1 = true;
-                return var1;
+                return true;
             }
         }
 
-        public void tick() {
-            super.tick();
+        // Método que resetea el objetivo o reduce el tiempo de espera de la harpy
+        public void tick() { // method_6268
             if (this.isIdle) {
                 --this.idleTime;
                 this.harpy.setDeltaMovement(Vec3.ZERO);
-                this.harpy.lookControl.setLookAt(this.harpy.getX(), this.harpy.getY(), this.harpy.getZ());
                 if (this.idleTime <= 0) {
                     this.isIdle = false;
                 }
             } else {
-                if (this.harpy.isFlying()) {
-                    this.targetPos = this.getRandomAirPosition();
+                if (this.harpy.onGround()) {
+                    this.targetPos = getRandomAirPosition();
                 }
 
-                label21: {
-                    if (this.targetPos != null) {
-                        double d0 = this.harpy.position().distanceTo(this.targetPos);
-                        if (!(d0 < 1.5)) {
-                            break label21;
-                        }
-                    }
-
-                    this.targetPos = this.getRandomAirPosition();
+                if (this.targetPos != null && this.harpy.position().distanceTo(this.targetPos) < targetThreshold) {
+                    this.targetPos = getRandomAirPosition();
                 }
 
                 if (this.targetPos != null) {
                     Vec3 direction = this.targetPos.subtract(this.harpy.position()).normalize().scale(this.speed);
                     this.harpy.setDeltaMovement(direction);
-                    this.harpy.lookControl.setLookAt(this.targetPos.x, this.targetPos.y, this.targetPos.z);
+                    this.harpy.getLookControl().setLookAt(this.targetPos.x, this.targetPos.y, this.targetPos.z);
                     this.rotateTowardsTarget();
                 }
             }
-
         }
 
+        // Método que pone a la harpy en modo espera
         private void enterIdleMode() {
-            RandomSource random = this.harpy.random;
-            this.idleTime = random.nextInt(41) + 20;
+            this.idleTime = this.harpy.getRandom().nextInt(41) + 20;
             this.isIdle = true;
             this.harpy.setDeltaMovement(Vec3.ZERO);
         }
 
         private Vec3 getRandomAirPosition() {
             RandomSource random = this.harpy.getRandom();
-            Level world = this.harpy.level();
-            BlockPos currentPos = this.harpy.blockPosition();
-            int currentGroundHeight = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, currentPos.getX(), currentPos.getZ());
+            Level world = this.harpy.level(); // class_1937
+            BlockPos currentPos = this.harpy.blockPosition(); // class_2338
+            int groundHeight = world.getHeight(Heightmap.Types.WORLD_SURFACE, currentPos.getX(), currentPos.getZ());
             int altitudeRange = this.maxAltitude - this.minAltitude;
 
-            for(int i = 0; i < 10; ++i) {
-                double newY = (double)(currentGroundHeight + this.minAltitude) + random.nextInt() * (double)altitudeRange;
-                double x = this.harpy.getX() + (random.nextInt() * 20.0 - 10.0);
-                double z = this.harpy.getZ() + (random.nextInt() * 20.0 - 10.0);
+            for (int i = 0; i < 10; ++i) {
+                double newY = groundHeight + this.minAltitude + random.nextDouble() * altitudeRange;
+                double x = this.harpy.getX() + (random.nextDouble() * 20.0 - 10.0);
+                double z = this.harpy.getZ() + (random.nextDouble() * 20.0 - 10.0);
                 Vec3 targetPos = new Vec3(x, newY, z);
                 BlockPos targetBlockPos = BlockPos.containing(targetPos);
                 if (this.isValidFlyPosition(world, targetBlockPos)) {
@@ -625,30 +570,30 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             return null;
         }
 
+        // Método que verifica si una posición de vuelo es válida
         private boolean isValidFlyPosition(Level world, BlockPos pos) {
             if (world.isEmptyBlock(pos) && world.isEmptyBlock(pos.above())) {
                 BlockPos belowPos = pos.below();
-                if (!(world.getBlockState(belowPos).getBlock() instanceof LeavesBlock)) {
-                    Iterator<BlockPos> var4 = BlockPos.betweenClosedStream(pos.offset(-1, -1, -1), pos.offset(1, 1, 1)).iterator();
-
-                    BlockPos adjacentPos;
-                    do {
-                        if (!var4.hasNext()) {
-                            return true;
+                if (world.getBlockState(belowPos).getBlock().getDescriptionId().contains("leaves")) {
+                    return false;
+                } else {
+                    for (BlockPos adjacentPos : BlockPos.betweenClosed(pos.offset(-1, -1, -1), pos.offset(1, 1, 1))) {
+                        if (world.getBlockState(adjacentPos).getBlock().getDescriptionId().contains("leaves")) {
+                            return false;
                         }
-
-                        adjacentPos = (BlockPos) var4.next();
-                    } while (world.getBlockState(adjacentPos).getBlock() instanceof LeavesBlock);
-
+                    }
+                    return true;
                 }
+            } else {
+                return false;
             }
-            return false;
         }
 
+        // Método que rota la harpy hacia el objetivo
         private void rotateTowardsTarget() {
             Vec3 currentPosition = this.harpy.position();
             Vec3 directionToTarget = this.targetPos.subtract(currentPosition).normalize();
-            double yaw = Math.toDegrees(Math.atan2(directionToTarget.x, directionToTarget.z));
+            double yaw = Math.toDegrees(Math.atan2(directionToTarget.z, directionToTarget.x)) - 90.0;
             double pitch = -Math.toDegrees(Math.atan2(directionToTarget.y, Math.sqrt(directionToTarget.x * directionToTarget.x + directionToTarget.z * directionToTarget.z)));
             this.harpy.setYRot((float)yaw);
             this.harpy.setXRot((float)pitch);
