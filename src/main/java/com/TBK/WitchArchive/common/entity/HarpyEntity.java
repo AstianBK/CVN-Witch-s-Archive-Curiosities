@@ -481,7 +481,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         }
 
         // Método principal de vuelo de la harpy
-        public void start() { // method_6269
+        public void start() {
             if (!this.isIdle) {
                 if (this.targetPos != null) {
                     if (this.harpy.position().distanceTo(this.targetPos) < targetThreshold) {

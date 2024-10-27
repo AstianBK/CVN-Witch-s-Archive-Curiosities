@@ -33,7 +33,7 @@ public class FeatherProjectile extends AbstractArrow implements ItemSupplier {
     protected void onHitEntity(EntityHitResult pResult) {
         if(pResult.getEntity() instanceof LivingEntity living && !(living instanceof HarpyEntity)){
             living.invulnerableTime = 0;
-            living.hurt(damageSources().arrow(this,this.getOwner()),8.0F);
+            living.hurt(damageSources().arrow(this,this.getOwner()),5.0F);
             living.invulnerableTime = 0;
         }
         this.discard();
