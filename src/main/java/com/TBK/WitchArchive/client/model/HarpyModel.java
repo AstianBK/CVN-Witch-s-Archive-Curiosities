@@ -27,6 +27,7 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 	private final ModelPart boobies;
 	private final ModelPart Waist;
 	private final ModelPart Hips;
+	private final ModelPart Tail;
 	private final ModelPart LeftArm;
 	private final ModelPart LeftUpper;
 	private final ModelPart LeftLower;
@@ -52,6 +53,7 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		this.boobies = this.Torso.getChild("boobies");
 		this.Waist = this.Torso.getChild("Waist");
 		this.Hips = this.Waist.getChild("Hips");
+		this.Tail = this.Hips.getChild("Tail");
 		this.LeftArm = this.main.getChild("LeftArm");
 		this.LeftUpper = this.LeftArm.getChild("LeftUpper");
 		this.LeftLower = this.LeftArm.getChild("LeftLower");
@@ -77,10 +79,10 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		PartDefinition main = partdefinition.addOrReplaceChild("main", CubeListBuilder.create(), PartPose.offset(0.0F, 4.0F, 0.0F));
 
 		PartDefinition Head = main.addOrReplaceChild("Head", CubeListBuilder.create().texOffs(0, 0).addBox(-3.0F, -2.9375F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.1F))
-		.texOffs(24, 0).addBox(-3.0F, -3.0625F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.45F))
-		.texOffs(48, 6).addBox(-3.0F, -4.4875F, -3.5F, 6.0F, 5.0F, 0.0F, new CubeDeformation(0.0F))
-		.texOffs(48, 6).addBox(-3.0F, -4.4875F, -3.5F, 6.0F, 5.0F, 0.0F, new CubeDeformation(0.0F))
-		.texOffs(24, 0).addBox(-3.0F, -4.0625F, -3.0F, 6.0F, 1.0F, 6.0F, new CubeDeformation(-0.1F)), PartPose.offset(0.0F, -7.0625F, 0.2F));
+				.texOffs(24, 0).addBox(-3.0F, -3.0625F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.45F))
+				.texOffs(48, 6).addBox(-3.0F, -4.4875F, -3.5F, 6.0F, 5.0F, 0.0F, new CubeDeformation(0.0F))
+				.texOffs(48, 6).addBox(-3.0F, -4.4875F, -3.5F, 6.0F, 5.0F, 0.0F, new CubeDeformation(0.0F))
+				.texOffs(24, 0).addBox(-3.0F, -4.0625F, -3.0F, 6.0F, 1.0F, 6.0F, new CubeDeformation(-0.1F)), PartPose.offset(0.0F, -7.0625F, 0.2F));
 
 		PartDefinition Hair3_r1 = Head.addOrReplaceChild("Hair3_r1", CubeListBuilder.create().texOffs(0, 34).addBox(-3.0F, -3.25F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.25F)), PartPose.offsetAndRotation(0.0F, -0.0625F, 0.0F, 0.0F, 0.0F, -0.0873F));
 
@@ -110,6 +112,10 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 
 		PartDefinition Hips = Waist.addOrReplaceChild("Hips", CubeListBuilder.create().texOffs(22, 28).addBox(-2.5F, -1.0F, -1.5F, 5.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 4.65F, 0.0F));
 
+		PartDefinition Tail = Hips.addOrReplaceChild("Tail", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, 1.525F));
+
+		PartDefinition cube_r1 = Tail.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(43, 42).addBox(-2.5F, -2.5F, 0.0F, 5.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.025F, -1.9F, 1.275F, -0.5672F, 0.0F, 0.0F));
+
 		PartDefinition LeftArm = main.addOrReplaceChild("LeftArm", CubeListBuilder.create(), PartPose.offset(2.445F, -2.957F, 0.1936F));
 
 		PartDefinition LeftUpper = LeftArm.addOrReplaceChild("LeftUpper", CubeListBuilder.create().texOffs(16, 12).addBox(-1.05F, -0.9F, -1.0F, 2.0F, 7.0F, 2.0F, new CubeDeformation(-0.05F)), PartPose.offset(1.055F, -0.143F, 0.0336F));
@@ -119,9 +125,9 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		PartDefinition LeftArmFeathers_r1 = LeftLower.addOrReplaceChild("LeftArmFeathers_r1", CubeListBuilder.create().texOffs(10, 15).mirror().addBox(0.0F, -6.5F, -3.0F, 0.0F, 13.0F, 6.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offsetAndRotation(-0.05F, 4.7758F, 6.0938F, -1.0908F, 0.0F, 0.0F));
 
 		PartDefinition LeftArmFeathers_r2 = LeftLower.addOrReplaceChild("LeftArmFeathers_r2", CubeListBuilder.create().texOffs(0, 16).addBox(-0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
-		.texOffs(0, 16).addBox(0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
-		.texOffs(10, 15).addBox(-0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 6.0F, new CubeDeformation(0.0F))
-		.texOffs(24, 13).addBox(-1.025F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
+				.texOffs(0, 16).addBox(0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
+				.texOffs(10, 15).addBox(-0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 6.0F, new CubeDeformation(0.0F))
+				.texOffs(24, 13).addBox(-1.025F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
 
 		PartDefinition RightArm = main.addOrReplaceChild("RightArm", CubeListBuilder.create(), PartPose.offset(-2.445F, -3.082F, 0.2186F));
 
@@ -130,9 +136,9 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		PartDefinition RightLower = RightArm.addOrReplaceChild("RightLower", CubeListBuilder.create(), PartPose.offset(-1.055F, 5.982F, 0.0086F));
 
 		PartDefinition RightArmFeathers_r1 = RightLower.addOrReplaceChild("RightArmFeathers_r1", CubeListBuilder.create().texOffs(0, 16).mirror().addBox(0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
-		.texOffs(11, 16).mirror().addBox(0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
-		.texOffs(0, 16).mirror().addBox(-0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
-		.texOffs(24, 13).mirror().addBox(-0.975F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)).mirror(false), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
+				.texOffs(11, 16).mirror().addBox(0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
+				.texOffs(0, 16).mirror().addBox(-0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
+				.texOffs(24, 13).mirror().addBox(-0.975F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)).mirror(false), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
 
 		PartDefinition RightArmFeathers_r2 = RightLower.addOrReplaceChild("RightArmFeathers_r2", CubeListBuilder.create().texOffs(10, 15).mirror().addBox(0.0F, -6.5F, -3.0F, 0.0F, 13.0F, 6.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offsetAndRotation(0.05F, 4.7758F, 6.0938F, -1.0908F, 0.0F, 0.0F));
 
@@ -167,12 +173,12 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		this.root().getAllParts().forEach(ModelPart::resetPose);
 		this.applyHeadRotation(entity,netHeadYaw,headPitch,ageInTicks);
-		this.animateWalk(HarpyAnimations.WING_FLY,limbSwing,limbSwingAmount,1.0F,1.2f);
-		this.animate(entity.sitting,HarpyAnimations.SIT,ageInTicks);
-		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.IDLE_FLY : HarpyAnimations.WINGS_NO_ANIM,ageInTicks);
-		this.animate(entity.idle,HarpyAnimations.IDLE_FLY,ageInTicks);
-		this.animate(entity.attackRange,HarpyAnimations.RANGED,ageInTicks);
-		this.animate(entity.attackMelee,HarpyAnimations.MELEE,ageInTicks);
+		this.animateWalk(entity.isAggressive() ? HarpyAnimations.HARPY_WINGS2 : HarpyAnimations.HARPY_WINGS1,limbSwing,limbSwingAmount,1.0F,1.2f);
+		this.animate(entity.sitting,HarpyAnimations.HARPY_SIT,ageInTicks);
+		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.HARPY_IDLEFLY : HarpyAnimations.HARPY_WINGS3,ageInTicks);
+		this.animate(entity.idle,HarpyAnimations.HARPY_IDLEFLY,ageInTicks);
+		this.animate(entity.attackRange,HarpyAnimations.HARPY_RANGED,ageInTicks);
+		this.animate(entity.attackMelee,HarpyAnimations.HARPY_MELEE,ageInTicks);
 		if(entity.isSitting()){
 			this.main.y=15F;
 		}else {
