@@ -43,6 +43,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -391,14 +393,17 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                 }
                 this.rotateTowardsTarget(target);
                 if (this.attackCooldown>=20 && !this.meleeAttack && direction!=null && direction.length()<1.0F) {
-                    FeatherProjectile abstractarrow = new FeatherProjectile(this.world,this.harpy);
-                    double d0 = target.getX() - this.harpy.getX();
-                    double d1 = target.getY(0.3333333333333333D) - abstractarrow.getY();
-                    double d2 = target.getZ() - this.harpy.getZ();
-                    double d3 = Math.sqrt(d0 * d0 + d2 * d2);
-                    abstractarrow.shoot(d0, d1 + d3 * (double)0.2F, d2, 1.6F, (float)(14 - this.harpy.level().getDifficulty().getId() * 4));
-                    this.harpy.playSound(SoundEvents.SKELETON_SHOOT, 1.0F, 1.0F / (this.harpy.getRandom().nextFloat() * 0.4F + 0.8F));
-                    this.world.addFreshEntity(abstractarrow);
+                    for(int i=0;i<3;i++){
+                        double rotActually=-10+10*i;
+                        FeatherProjectile abstractarrow = new FeatherProjectile(this.world,this.harpy);
+                        Vec3 vec31 = this.harpy.getUpVector(1.0F);
+                        Quaternionf quaternionf = (new Quaternionf()).setAngleAxis((double)(rotActually * ((float)Math.PI / 180F)), vec31.x, vec31.y, vec31.z);
+                        Vec3 vec3 = this.harpy.getViewVector(1.0F);
+                        Vector3f vector3f = vec3.toVector3f().rotate(quaternionf);
+                        abstractarrow.shoot((double)vector3f.x(), (double)vector3f.y(), (double)vector3f.z(), 1.0F, 0.1F);
+                        this.harpy.playSound(SoundEvents.SKELETON_SHOOT, 1.0F, 1.0F / (this.harpy.getRandom().nextFloat() * 0.4F + 0.8F));
+                        this.world.addFreshEntity(abstractarrow);
+                    }
                     if(!this.world.isClientSide){
                         this.world.broadcastEntityEvent(this.harpy,(byte) 62);
                     }
@@ -477,7 +482,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         }
 
         public boolean canUse() { // method_6264
-            return this.harpy.isAlive() && !this.isIdle && this.harpy.isPatrolling();
+            return this.harpy.isAlive() && !this.isIdle && !this.harpy.isSitting() && this.harpy.isPatrolling();
         }
 
         // Método principal de vuelo de la harpy
