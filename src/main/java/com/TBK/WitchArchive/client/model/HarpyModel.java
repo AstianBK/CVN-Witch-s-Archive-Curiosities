@@ -167,8 +167,9 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		this.root().getAllParts().forEach(ModelPart::resetPose);
 		this.applyHeadRotation(entity,netHeadYaw,headPitch,ageInTicks);
+		this.animateWalk(HarpyAnimations.WING_FLY,limbSwing,limbSwingAmount,1.0F,1.2f);
 		this.animate(entity.sitting,HarpyAnimations.SIT,ageInTicks);
-		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.WING_FLY : HarpyAnimations.WINGS_NO_ANIM,ageInTicks);
+		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.IDLE_FLY : HarpyAnimations.WINGS_NO_ANIM,ageInTicks);
 		this.animate(entity.idle,HarpyAnimations.IDLE_FLY,ageInTicks);
 		this.animate(entity.attackRange,HarpyAnimations.RANGED,ageInTicks);
 		this.animate(entity.attackMelee,HarpyAnimations.MELEE,ageInTicks);

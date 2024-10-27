@@ -213,6 +213,10 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
     private void setSoulEaterEntityFlag(int pMask) {
         this.entityData.set(DATA_FLAGS_ID, pMask);
+        if(pMask==2){
+            double dy=this.level().getHeight(Heightmap.Types.WORLD_SURFACE_WG, (int) this.getX(), (int) this.getZ());
+            this.setPos(this.getX(),dy,this.getZ());
+        }
     }
 
 
@@ -441,9 +445,13 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             Vec3 targetPos = target.position();
             Vec3 harpyPos = this.harpy.position();
             double dx = targetPos.x - harpyPos.x;
+            double dy = targetPos.y - harpyPos.y;
             double dz = targetPos.z - harpyPos.z;
             double targetYaw = Math.toDegrees(Math.atan2(dz, dx)) - 90.0;
+            double pitch = -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
             this.harpy.setYRot(this.lerpRotation(this.harpy.getYRot(), (float)targetYaw, 30.0F));
+            this.harpy.setXRot((float)pitch);
+
         }
 
         private float lerpRotation(float currentYaw, float targetYaw, float maxTurnSpeed) {
@@ -481,7 +489,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             this.setFlags(EnumSet.of(Flag.MOVE));
         }
 
-        public boolean canUse() { // method_6264
+        public boolean canUse() {
             return this.harpy.isAlive() && !this.isIdle && !this.harpy.isSitting() && this.harpy.isPatrolling();
         }
 
@@ -516,6 +524,8 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                     if (this.targetPos == null || this.harpy.position().distanceTo(this.targetPos) >= targetThreshold) {
                         return false;
                     }
+                }else if(this.harpy.isSitting()){
+                    return false;
                 }
                 return true;
             }
