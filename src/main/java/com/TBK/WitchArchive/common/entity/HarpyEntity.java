@@ -115,16 +115,11 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         this.goalSelector.addGoal(9, new FloatGoal(this));
         this.goalSelector.addGoal(2, new HarpyAttack(this,0.25, 8.0, 20, 4, 10));
         this.goalSelector.addGoal(4, new HarpyFlyGoal(this, 0.25, 3, 6));
-        this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D){
-            @Override
-            public boolean canUse() {
-                return super.canUse() && !HarpyEntity.this.isPatrolling() && !HarpyEntity.this.isPatrolling() && HarpyEntity.this.isFollowing();
-            }
-        });
+        this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D));
         this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 2.0D, 5.0F, 1.0F, true){
             @Override
             public boolean canUse() {
-                return super.canUse() && !HarpyEntity.this.isPatrolling() && !HarpyEntity.this.isPatrolling() && HarpyEntity.this.isFollowing();
+                return super.canUse() && !HarpyEntity.this.isPatrolling() && HarpyEntity.this.isFollowing();
             }
         });
         this.targetSelector.addGoal(2, new OwnerHurtByTargetGoal(this));
@@ -221,7 +216,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
 
     private void setupAnimationStates() {
-        if (this.idleAnimationTimeout <= 0 && !this.isSitting()) {
+        if (this.idleAnimationTimeout <= 0 && !this.isSitting() && !this.walkAnimation.isMoving()) {
             this.idleAnimationTimeout = 24;
             this.idle.start(this.tickCount);
             this.attackMelee.stop();
@@ -236,7 +231,10 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         } else {
             this.sitting.stop();
         }
-
+        if(this.walkAnimation.isMoving()) {
+            this.idleAnimationTimeout=0;
+            this.idle.stop();
+        }
     }
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> p_146754_) {
@@ -521,13 +519,8 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                 return this.idleTime > 0;
             } else {
                 if (!this.harpy.isAlive()) {
-                    if (this.targetPos == null || this.harpy.position().distanceTo(this.targetPos) >= targetThreshold) {
-                        return false;
-                    }
-                }else if(this.harpy.isSitting()){
-                    return false;
-                }
-                return true;
+                    return this.targetPos != null && !(this.harpy.position().distanceTo(this.targetPos) >= targetThreshold);
+                }else return !this.harpy.isSitting() && !this.harpy.isFollowing() && !this.harpy.isInLove();
             }
         }
 

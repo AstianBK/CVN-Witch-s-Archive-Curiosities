@@ -174,9 +174,10 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		this.root().getAllParts().forEach(ModelPart::resetPose);
 		this.applyHeadRotation(entity,netHeadYaw,headPitch,ageInTicks);
 		this.animateWalk(entity.isAggressive() ? HarpyAnimations.HARPY_WINGS2 : HarpyAnimations.HARPY_WINGS1,limbSwing,limbSwingAmount,1.0F,1.2f);
-		this.animate(entity.sitting,HarpyAnimations.HARPY_SIT,ageInTicks);
-		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.HARPY_IDLEFLY : HarpyAnimations.HARPY_WINGS3,ageInTicks);
+		this.animateWalk(HarpyAnimations.HARPY_IDLEFIGHT,limbSwing,limbSwingAmount,1.0F,1.2F);
 		this.animate(entity.idle,HarpyAnimations.HARPY_IDLEFLY,ageInTicks);
+		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.HARPY_WINGS1 : HarpyAnimations.HARPY_WINGS3,ageInTicks);
+		this.animate(entity.sitting,HarpyAnimations.HARPY_SIT,ageInTicks);
 		this.animate(entity.attackRange,HarpyAnimations.HARPY_RANGED,ageInTicks);
 		this.animate(entity.attackMelee,HarpyAnimations.HARPY_MELEE,ageInTicks);
 		if(entity.isSitting()){
