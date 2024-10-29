@@ -27,6 +27,11 @@ public class HarpyRenderer <T extends HarpyEntity,M extends HarpyModel<T>> exten
         this.addLayer(new HarpyFeatherLayer<>(this));
     }
 
+    @Nullable
+    @Override
+    protected RenderType getRenderType(T p_115322_, boolean p_115323_, boolean p_115324_, boolean p_115325_) {
+        return RenderType.entityTranslucent(this.getTextureLocation(p_115322_));
+    }
 
     @Override
     public ResourceLocation getTextureLocation(T p_114482_) {

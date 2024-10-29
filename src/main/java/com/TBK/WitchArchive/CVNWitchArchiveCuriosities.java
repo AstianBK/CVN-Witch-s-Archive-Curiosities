@@ -3,6 +3,7 @@ package com.TBK.WitchArchive;
 import com.TBK.WitchArchive.client.renderer.ElderHarpyRenderer;
 import com.TBK.WitchArchive.client.renderer.FeatherRenderer;
 import com.TBK.WitchArchive.client.renderer.HarpyRenderer;
+import com.TBK.WitchArchive.common.register.CVNCreativeTabs;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import com.TBK.WitchArchive.common.register.CVNItems;
 import com.TBK.WitchArchive.server.world.BKBiomeSpawn;
@@ -41,7 +42,7 @@ public class CVNWitchArchiveCuriosities
         final DeferredRegister<Codec<? extends BiomeModifier>> biomeModifiers = DeferredRegister.create(ForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS, CVNWitchArchiveCuriosities.MODID);
         biomeModifiers.register(modEventBus);
         biomeModifiers.register("witch_archive_spawn", BKBiomeSpawn::makeCodec);
-
+        CVNCreativeTabs.TABS.register(modEventBus);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT,()->()->{
             modEventBus.addListener(this::registerRenderers);
         });

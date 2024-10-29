@@ -23,6 +23,6 @@ public class CVNItems {
                     new Item.Properties()));
 
     public static final RegistryObject<Item> ELDER_HARPY_SPAWN_EGG = ITEMS.register("elder_harpy_spawn_egg",
-            () -> new ForgeSpawnEggItem(CVNEntityType.HARPY,0x948e8d, 0x573f2c,
+            () -> new ForgeSpawnEggItem(CVNEntityType.ELDER_HARPY,0x948e8d, 0x573f2c,
                     new Item.Properties()));
 }
