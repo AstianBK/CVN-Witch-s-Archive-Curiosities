@@ -18,6 +18,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 public class ModEvent {
     @SubscribeEvent
     public static void registerAttribute(EntityAttributeCreationEvent event) {
+        SpawnPlacements.register(CVNEntityType.HARPY.get(),
+                SpawnPlacements.Type.ON_GROUND,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                Mob::checkMobSpawnRules);
+
         event.put(CVNEntityType.ELDER_HARPY.get(), ElderHarpyEntity.setAttributes());
         event.put(CVNEntityType.HARPY.get(), HarpyEntity.setAttributes());
     }

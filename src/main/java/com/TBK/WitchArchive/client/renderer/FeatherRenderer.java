@@ -26,8 +26,8 @@ public class FeatherRenderer<T extends AbstractArrow & ItemSupplier> extends Ent
     }
     public void render(T pEntity, float pEntityYaw, float pPartialTicks, PoseStack pMatrixStack, MultiBufferSource pBuffer, int pPackedLight) {
         pMatrixStack.pushPose();
-        pMatrixStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(pPartialTicks, pEntity.yRotO, pEntity.getYRot())));
-        pMatrixStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(pPartialTicks, pEntity.xRotO, pEntity.getXRot())));
+        pMatrixStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(pPartialTicks, pEntity.yRotO, pEntity.getYRot())-90.0F));
+        pMatrixStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(pPartialTicks, pEntity.xRotO, pEntity.getXRot())-45.0F));
         this.itemRenderer.renderStatic(pEntity.getItem(), ItemDisplayContext.GROUND,pPackedLight, OverlayTexture.NO_OVERLAY,pMatrixStack,pBuffer,null,pEntity.getId());
 
         pMatrixStack.popPose();

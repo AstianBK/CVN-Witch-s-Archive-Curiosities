@@ -1,9 +1,11 @@
 package com.TBK.WitchArchive.common.entity;
 
+import com.TBK.WitchArchive.DefaultBiomes;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import com.TBK.WitchArchive.common.register.CVNItems;
+import com.TBK.WitchArchive.server.world.BKBiomeConfig;
+import com.TBK.WitchArchive.server.world.BKBiomeSpawn;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -11,7 +13,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
@@ -28,7 +29,6 @@ import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.entity.animal.FlyingAnimal;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.player.Player;
@@ -37,11 +37,12 @@ import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -53,6 +54,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     public final AnimationState attackRange=new AnimationState();
     public final AnimationState sitting=new AnimationState();
     public final AnimationState idle=new AnimationState();
+    public final AnimationState idleWings=new AnimationState();
 
     private static final EntityDataAccessor<Integer> DATA_COLOR =
             SynchedEntityData.defineId(HarpyEntity.class, EntityDataSerializers.INT);
@@ -172,8 +174,11 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             if(!this.level().isClientSide){
                 this.level().broadcastEntityEvent(this,(byte) 7);
             }
+            this.setSoulEaterEntityFlag(2);
+            return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.getItem() instanceof DyeItem item){
             this.setColor(item.getDyeColor());
+            return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.isEmpty() && this.isTame() && this.isOwnedBy(p_27584_)){
             this.chargeState();
             if(p_27584_.level().isClientSide){
@@ -216,9 +221,10 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
 
     private void setupAnimationStates() {
-        if (this.idleAnimationTimeout <= 0 && !this.isSitting() && !this.walkAnimation.isMoving()) {
+        if (this.idleAnimationTimeout <= 0 && !this.isSitting()) {
             this.idleAnimationTimeout = 24;
             this.idle.start(this.tickCount);
+            this.idleWings.start(this.tickCount);
             this.attackMelee.stop();
             this.attackRange.stop();
         } else {
@@ -228,12 +234,9 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         if (this.isSitting()) {
             this.sitting.startIfStopped(this.tickCount);
             this.idle.stop();
+            this.idleWings.stop();
         } else {
             this.sitting.stop();
-        }
-        if(this.walkAnimation.isMoving()) {
-            this.idleAnimationTimeout=0;
-            this.idle.stop();
         }
     }
     @Override
@@ -249,11 +252,13 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         if(p_21807_==4){
             this.attackMelee.start(this.tickCount);
             this.idle.stop();
-            this.idleAnimationTimeout=20;
+            this.idleWings.stop();
+            this.idleAnimationTimeout=19;
         }else if(p_21807_==62){
             this.attackRange.start(this.tickCount);
             this.idle.stop();
-            this.idleAnimationTimeout=24;
+            this.idleWings.stop();
+            this.idleAnimationTimeout=20;
 
         }else {
             super.handleEntityEvent(p_21807_);
@@ -360,7 +365,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
         public void resetAmount(){
             this.rot=this.world.random.nextBoolean();
-            this.countFeather = 5 + world.random.nextInt(1,5);
+            this.countFeather = 3 + world.random.nextInt(1,3);
         }
 
         public boolean canContinueToUse() {
@@ -394,7 +399,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                     this.harpy.setDeltaMovement(direction.scale(this.speed));
                 }
                 this.rotateTowardsTarget(target);
-                if (this.attackCooldown>=20 && !this.meleeAttack && direction!=null && direction.length()<1.0F) {
+                if (this.attackCooldown>=20 && !this.meleeAttack && this.harpy.getSensing().hasLineOfSight(target) && distanceToTarget<64.0F) {
                     for(int i=0;i<3;i++){
                         double rotActually=-10+10*i;
                         FeatherProjectile abstractarrow = new FeatherProjectile(this.world,this.harpy);
@@ -475,9 +480,10 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         private final int maxAltitude;
         private Vec3 targetPos;
         private final double targetThreshold = 1.5;
-
+        private int chargeTime=0;
         private int idleTime = 0;
         private boolean isIdle = false;
+        private int oldY =0;
 
         public HarpyFlyGoal(HarpyEntity harpy, double speed, int minAltitude, int maxAltitude) {
             this.harpy = harpy;
@@ -507,20 +513,25 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                 if (this.targetPos != null) {
                     Vec3 direction = this.targetPos.subtract(this.harpy.position()).normalize().scale(this.speed);
                     this.harpy.setDeltaMovement(direction);
+                    this.oldY = this.harpy.blockPosition().getY();
                     this.harpy.getLookControl().setLookAt(this.targetPos.x, this.targetPos.y, this.targetPos.z);
                     this.rotateTowardsTarget();
                 }
             }
         }
 
-        // Método que verifica si la harpy debe continuar volando o detenerse
-        public boolean canContinueToUse() { // method_6266
+        @Override
+        public void stop() {
+            super.stop();
+        }
+
+        public boolean canContinueToUse() {
             if (this.isIdle) {
                 return this.idleTime > 0;
             } else {
                 if (!this.harpy.isAlive()) {
                     return this.targetPos != null && !(this.harpy.position().distanceTo(this.targetPos) >= targetThreshold);
-                }else return !this.harpy.isSitting() && !this.harpy.isFollowing() && !this.harpy.isInLove();
+                }else return !this.harpy.isSitting() && !this.harpy.isFollowing() && !this.harpy.isInLove() && !this.harpy.isAggressive();
             }
         }
 
@@ -537,6 +548,14 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                     this.targetPos = getRandomAirPosition();
                 }
 
+                if(this.targetPos != null && this.oldY==this.harpy.blockPosition().getY()){
+                    this.chargeTime+=20;
+                }
+                if(this.chargeTime>100){
+                    this.chargeTime=0;
+                    this.targetPos= getRandomAirPosition();
+                }
+
                 if (this.targetPos != null && this.harpy.position().distanceTo(this.targetPos) < targetThreshold) {
                     this.targetPos = getRandomAirPosition();
                 }
@@ -544,6 +563,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
                 if (this.targetPos != null) {
                     Vec3 direction = this.targetPos.subtract(this.harpy.position()).normalize().scale(this.speed);
                     this.harpy.setDeltaMovement(direction);
+                    this.oldY = this.harpy.blockPosition().getY();
                     this.harpy.getLookControl().setLookAt(this.targetPos.x, this.targetPos.y, this.targetPos.z);
                     this.rotateTowardsTarget();
                 }
@@ -564,21 +584,24 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             int groundHeight = world.getHeight(Heightmap.Types.WORLD_SURFACE, currentPos.getX(), currentPos.getZ());
             int altitudeRange = this.maxAltitude - this.minAltitude;
 
+            Vec3 targetPos = null;
             for (int i = 0; i < 10; ++i) {
                 double newY = groundHeight + this.minAltitude + random.nextDouble() * altitudeRange;
                 double x = this.harpy.getX() + (random.nextDouble() * 20.0 - 10.0);
                 double z = this.harpy.getZ() + (random.nextDouble() * 20.0 - 10.0);
-                Vec3 targetPos = new Vec3(x, newY, z);
-                BlockPos targetBlockPos = BlockPos.containing(targetPos);
+                Vec3 targetPosAux = new Vec3(x, newY, z);
+                BlockPos targetBlockPos = BlockPos.containing(targetPosAux);
                 if (this.isValidFlyPosition(world, targetBlockPos)) {
-                    return targetPos;
+                    if(BKBiomeConfig.test(BKBiomeConfig.harpy,world.getBiome(targetBlockPos), BKBiomeSpawn.getBiomeName(world.getBiome(targetBlockPos)))){
+                        return  targetPosAux;
+                    }
+                    targetPos=targetPosAux;
                 }
             }
 
-            return null;
+            return targetPos;
         }
 
-        // Método que verifica si una posición de vuelo es válida
         private boolean isValidFlyPosition(Level world, BlockPos pos) {
             if (world.isEmptyBlock(pos) && world.isEmptyBlock(pos.above())) {
                 BlockPos belowPos = pos.below();

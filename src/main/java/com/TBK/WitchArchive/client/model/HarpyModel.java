@@ -9,6 +9,7 @@ import com.TBK.WitchArchive.common.entity.HarpyEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.animation.AnimationDefinition;
+import net.minecraft.client.animation.KeyframeAnimations;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -17,8 +18,11 @@ import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.joml.Vector3f;
 
 public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
+	private static final Vector3f VECTOR_CACHE = new Vector3f();
+
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "harpy"), "main");
 	private final ModelPart main;
 	private final ModelPart Head;
@@ -173,13 +177,13 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		this.root().getAllParts().forEach(ModelPart::resetPose);
 		this.applyHeadRotation(entity,netHeadYaw,headPitch,ageInTicks);
-		this.animateWalk(entity.isAggressive() ? HarpyAnimations.HARPY_WINGS2 : HarpyAnimations.HARPY_WINGS1,limbSwing,limbSwingAmount,1.0F,1.2f);
-		this.animateWalk(HarpyAnimations.HARPY_IDLEFIGHT,limbSwing,limbSwingAmount,1.0F,1.2F);
-		this.animate(entity.idle,HarpyAnimations.HARPY_IDLEFLY,ageInTicks);
-		this.animate(entity.idle,!entity.isSitting() ? HarpyAnimations.HARPY_WINGS1 : HarpyAnimations.HARPY_WINGS3,ageInTicks);
-		this.animate(entity.sitting,HarpyAnimations.HARPY_SIT,ageInTicks);
-		this.animate(entity.attackRange,HarpyAnimations.HARPY_RANGED,ageInTicks);
-		this.animate(entity.attackMelee,HarpyAnimations.HARPY_MELEE,ageInTicks);
+		//this.animateWalk(HarpyAnimations.HARPY_WINGS1,limbSwing,limbSwingAmount,1.0F,1.2f);
+		this.animateWalk(entity.isAggressive() ? HarpyAnimations.HARPY_IDLEFIGHT :HarpyAnimations.HARPY_IDLEFLY,limbSwing,limbSwingAmount,1.0F,1.2F);
+		this.animate(entity.idle,HarpyAnimations.HARPY_IDLEFLY,ageInTicks,1.0F);
+		this.animate(entity.idleWings,HarpyAnimations.HARPY_WINGS1,ageInTicks,2.0F);
+		this.animate(entity.sitting,HarpyAnimations.HARPY_SIT,ageInTicks,1.0F);
+		this.animate(entity.attackRange,HarpyAnimations.HARPY_RANGED,ageInTicks,1.0F);
+		this.animate(entity.attackMelee,HarpyAnimations.HARPY_MELEE,ageInTicks,1.0F);
 		if(entity.isSitting()){
 			this.main.y=15F;
 		}else {
