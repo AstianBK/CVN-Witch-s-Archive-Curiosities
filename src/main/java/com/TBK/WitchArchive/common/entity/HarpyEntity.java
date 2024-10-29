@@ -183,7 +183,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.getItem() instanceof DyeItem item && this.isTame()){
             this.setColor(item.getDyeColor());
-            this.playSound(SoundEvents.BUCKET_FILL);
+            this.playSound(SoundEvents.INK_SAC_USE);
             return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.isEmpty() && this.isTame() && this.isOwnedBy(p_27584_)){
             this.chargeState();
