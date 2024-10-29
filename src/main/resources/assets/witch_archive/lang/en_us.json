@@ -7,6 +7,9 @@
   "entity.witch_archive.harpy": "Harpy",
   "entity.witch_archive.elder_harpy": "Elder Harpy",
 
+  "itemGroup.witch_archive": "Witch's Archive Curiosities",
+
+
   "item.witch_archive.golden_wheat_seeds": "Golden Wheat Seeds",
   "item.witch_archive.harpy_feather": "Harpy Feather",
   "item.witch_archive.harpy_spawn_egg": "Harpy Spawn Egg",
