@@ -168,7 +168,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
     @Override
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
-        ItemStack stack=p_27584_.getItemInHand(p_27585_);
+        ItemStack stack=p_27584_.getItemInHand(InteractionHand.MAIN_HAND);
         if(stack.is(Tags.Items.SEEDS) && !this.isTame()){
             if (this.random.nextInt(3) == 0) {
                 this.tame(p_27584_);
