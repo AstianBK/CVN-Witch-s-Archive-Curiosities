@@ -12,7 +12,7 @@ public class CVNCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CVNWitchArchiveCuriosities.MODID);
 
     public static final RegistryObject<CreativeModeTab> BK_MOBS_TAB = TABS.register(CVNWitchArchiveCuriosities.MODID,()-> CreativeModeTab.builder()
-            .icon(()->new ItemStack(CVNItems.GOLDEN_WHEAT_SEEDS.get()))
+            .icon(()->new ItemStack(CVNItems.HARPY_FEATHER.get()))
             .title(Component.translatable("itemGroup.witch_archive"))
             .displayItems((s,a)-> {
                 a.accept(CVNItems.GOLDEN_WHEAT_SEEDS.get());
