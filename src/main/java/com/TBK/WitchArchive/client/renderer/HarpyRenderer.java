@@ -7,9 +7,11 @@ import com.TBK.WitchArchive.client.model.HarpyModel;
 import com.TBK.WitchArchive.common.entity.HarpyEntity;
 import com.google.common.collect.Maps;
 import net.minecraft.Util;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -23,6 +25,12 @@ public class HarpyRenderer <T extends HarpyEntity,M extends HarpyModel<T>> exten
         super(p_174304_, (M) new HarpyModel<>(p_174304_.bakeLayer(HarpyModel.LAYER_LOCATION)), 0.0F);
         this.addLayer(new HarpyEyeLayer<>(this));
         this.addLayer(new HarpyFeatherLayer<>(this));
+    }
+
+    @Nullable
+    @Override
+    protected RenderType getRenderType(T p_115322_, boolean p_115323_, boolean p_115324_, boolean p_115325_) {
+        return RenderType.entityTranslucent(this.getTextureLocation(p_115322_));
     }
 
     @Override
