@@ -26,5 +26,9 @@ public class HarpyFeatherLayer<T extends HarpyEntity, M extends HarpyModel<T>> e
         float[] afloat = p_117352_.getColor().getTextureDiffuseColors();
         renderColoredCutoutModel(this.getParentModel(),FEATHERS,p_117349_,p_117350_,p_117351_,p_117352_, afloat[0], afloat[1], afloat[2]);
     }
+    protected static <T extends LivingEntity> void renderColoredCutoutModel(EntityModel<T> p_117377_, ResourceLocation p_117378_, PoseStack p_117379_, MultiBufferSource p_117380_, int p_117381_, T p_117382_, float p_117383_, float p_117384_, float p_117385_) {
+        VertexConsumer vertexconsumer = p_117380_.getBuffer(RenderType.entityTranslucent(p_117378_));
+        p_117377_.renderToBuffer(p_117379_, vertexconsumer, p_117381_, LivingEntityRenderer.getOverlayCoords(p_117382_, 0.0F), p_117383_, p_117384_, p_117385_, 1.0F);
+    }
 
 }
