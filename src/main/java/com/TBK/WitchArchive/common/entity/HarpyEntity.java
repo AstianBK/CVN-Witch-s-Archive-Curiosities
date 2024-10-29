@@ -37,12 +37,10 @@ import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -117,11 +115,16 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         this.goalSelector.addGoal(9, new FloatGoal(this));
         this.goalSelector.addGoal(2, new HarpyAttack(this,0.25, 8.0, 20, 4, 10));
         this.goalSelector.addGoal(4, new HarpyFlyGoal(this, 0.25, 3, 6));
-        this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D));
+        this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D){
+            @Override
+            public boolean canUse() {
+                return super.canUse() && !HarpyEntity.this.isSitting();
+            }
+        });
         this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 2.0D, 5.0F, 1.0F, true){
             @Override
             public boolean canUse() {
-                return super.canUse() && !HarpyEntity.this.isPatrolling() && HarpyEntity.this.isFollowing();
+                return super.canUse() && HarpyEntity.this.isFollowing();
             }
         });
         this.targetSelector.addGoal(2, new OwnerHurtByTargetGoal(this));
@@ -170,15 +173,16 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
         ItemStack stack=p_27584_.getItemInHand(InteractionHand.MAIN_HAND);
         if(stack.is(Tags.Items.SEEDS) && !this.isTame()){
-            if (this.random.nextInt(3) == 0) {
-                this.tame(p_27584_);
-                this.navigation.stop();
-                this.setTarget((LivingEntity)null);
-                this.setOrderedToSit(true);
-                this.setSoulEaterEntityFlag(2);
-                this.level().broadcastEntityEvent(this, (byte)7);
-            } else {
-                this.level().broadcastEntityEvent(this, (byte)6);
+            if(!this.level().isClientSide){
+                if (this.random.nextInt(3) == 0) {
+                    this.tame(p_27584_);
+                    this.navigation.stop();
+                    this.setTarget((LivingEntity)null);
+                    this.setSoulEaterEntityFlag(2);
+                    this.level().broadcastEntityEvent(this, (byte)7);
+                } else {
+                    this.level().broadcastEntityEvent(this, (byte)6);
+                }
             }
             return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.getItem() instanceof DyeItem item && this.isTame()){
