@@ -17,7 +17,6 @@ public class CVNCreativeTabs {
             .displayItems((s,a)-> {
                 a.accept(CVNItems.GOLDEN_WHEAT_SEEDS.get());
                 a.accept(CVNItems.HARPY_SPAWN_EGG.get());
-                a.accept(CVNItems.HARPY_FEATHER.get());
             })
             .build());
 }
