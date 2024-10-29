@@ -124,7 +124,7 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 
 		PartDefinition LeftArmFeathers_r1 = LeftLower.addOrReplaceChild("LeftArmFeathers_r1", CubeListBuilder.create().texOffs(0, 16).addBox(-0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
 				.texOffs(0, 16).addBox(0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
-				.texOffs(10, 15).addBox(-0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 6.0F, new CubeDeformation(0.0F))
+				.texOffs(11, 16).addBox(-0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 5.0F, new CubeDeformation(0.0F))
 				.texOffs(24, 13).addBox(-1.025F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
 
 		PartDefinition RightArm = main.addOrReplaceChild("RightArm", CubeListBuilder.create(), PartPose.offset(-2.445F, -3.082F, 0.2186F));
@@ -166,6 +166,7 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 
 		return LayerDefinition.create(meshdefinition, 64, 64);
 	}
+
 
 	@Override
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
