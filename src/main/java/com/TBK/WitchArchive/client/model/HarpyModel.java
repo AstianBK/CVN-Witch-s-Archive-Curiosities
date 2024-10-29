@@ -120,9 +120,9 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 
 		PartDefinition LeftLower = LeftArm.addOrReplaceChild("LeftLower", CubeListBuilder.create(), PartPose.offset(1.055F, 5.857F, 0.0336F));
 
-		PartDefinition RightArmFeathers_r1 = LeftLower.addOrReplaceChild("RightArmFeathers_r1", CubeListBuilder.create().texOffs(10, 15).mirror().addBox(0.0F, -6.5F, -3.0F, 0.0F, 13.0F, 6.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offsetAndRotation(-0.025F, 4.7758F, 6.0938F, -1.0908F, 0.0F, 0.0F));
+		PartDefinition LeftArmFeathers_r1 = LeftLower.addOrReplaceChild("LeftArmFeathers_r1", CubeListBuilder.create().texOffs(10, 15).addBox(0.0F, -6.5F, -3.0F, 0.0F, 13.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.05F, 4.7758F, 6.0938F, -1.0908F, 0.0F, 0.0F));
 
-		PartDefinition LeftArmFeathers_r1 = LeftLower.addOrReplaceChild("LeftArmFeathers_r1", CubeListBuilder.create().texOffs(0, 16).addBox(-0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
+		PartDefinition LeftArmFeathers_r2 = LeftLower.addOrReplaceChild("LeftArmFeathers_r2", CubeListBuilder.create().texOffs(0, 16).addBox(-0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
 				.texOffs(0, 16).addBox(0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F))
 				.texOffs(11, 16).addBox(-0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 5.0F, new CubeDeformation(0.0F))
 				.texOffs(24, 13).addBox(-1.025F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
@@ -133,12 +133,12 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 
 		PartDefinition RightLower = RightArm.addOrReplaceChild("RightLower", CubeListBuilder.create(), PartPose.offset(-1.055F, 5.982F, 0.0086F));
 
-		PartDefinition RightArmFeathers_r2 = RightLower.addOrReplaceChild("RightArmFeathers_r2", CubeListBuilder.create().texOffs(0, 16).mirror().addBox(0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
+		PartDefinition RightArmFeathers_r1 = RightLower.addOrReplaceChild("RightArmFeathers_r1", CubeListBuilder.create().texOffs(0, 16).mirror().addBox(0.575F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
 				.texOffs(11, 16).mirror().addBox(0.05F, -5.7F, 0.05F, 0.0F, 12.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
 				.texOffs(0, 16).mirror().addBox(-0.425F, -4.7F, -0.95F, 0.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false)
 				.texOffs(24, 13).mirror().addBox(-0.975F, -0.7F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.15F)).mirror(false), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -1.0908F, 0.0F, 0.0F));
 
-		PartDefinition RightArmFeathers_r3 = RightLower.addOrReplaceChild("RightArmFeathers_r3", CubeListBuilder.create().texOffs(10, 15).mirror().addBox(0.0F, -6.5F, -3.0F, 0.0F, 13.0F, 6.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offsetAndRotation(0.05F, 4.7758F, 6.0938F, -1.0908F, 0.0F, 0.0F));
+		PartDefinition RightArmFeathers_r2 = RightLower.addOrReplaceChild("RightArmFeathers_r2", CubeListBuilder.create().texOffs(10, 15).mirror().addBox(0.0F, -6.5F, -3.0F, 0.0F, 13.0F, 6.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offsetAndRotation(0.05F, 4.7758F, 6.0938F, -1.0908F, 0.0F, 0.0F));
 
 		PartDefinition LeftLeg = main.addOrReplaceChild("LeftLeg", CubeListBuilder.create(), PartPose.offset(1.0F, 7.875F, 0.2022F));
 
