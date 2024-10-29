@@ -170,11 +170,16 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
         ItemStack stack=p_27584_.getItemInHand(p_27585_);
         if(stack.is(Tags.Items.SEEDS) && !this.isTame()){
-            this.tame(p_27584_);
-            if(!this.level().isClientSide){
-                this.level().broadcastEntityEvent(this,(byte) 7);
+            if (this.random.nextInt(3) == 0) {
+                this.tame(p_27584_);
+                this.navigation.stop();
+                this.setTarget((LivingEntity)null);
+                this.setOrderedToSit(true);
+                this.setSoulEaterEntityFlag(2);
+                this.level().broadcastEntityEvent(this, (byte)7);
+            } else {
+                this.level().broadcastEntityEvent(this, (byte)6);
             }
-            this.setSoulEaterEntityFlag(2);
             return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.getItem() instanceof DyeItem item){
             this.setColor(item.getDyeColor());
