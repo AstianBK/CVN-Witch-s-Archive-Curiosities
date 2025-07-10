@@ -3,6 +3,7 @@ package com.TBK.WitchArchive;
 import com.TBK.WitchArchive.client.renderer.ElderHarpyRenderer;
 import com.TBK.WitchArchive.client.renderer.FeatherRenderer;
 import com.TBK.WitchArchive.client.renderer.HarpyRenderer;
+import com.TBK.WitchArchive.client.renderer.MetalGearRayRenderer;
 import com.TBK.WitchArchive.common.register.CVNCreativeTabs;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import com.TBK.WitchArchive.common.register.CVNItems;
@@ -10,8 +11,13 @@ import com.TBK.WitchArchive.server.world.BKBiomeSpawn;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.model.obj.ObjLoader;
+import net.minecraftforge.client.model.obj.ObjModel;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.BiomeModifier;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -30,7 +36,7 @@ import org.slf4j.Logger;
 public class CVNWitchArchiveCuriosities
 {
     public static final String MODID = "witch_archive";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public CVNWitchArchiveCuriosities()
     {
@@ -45,17 +51,23 @@ public class CVNWitchArchiveCuriosities
         CVNCreativeTabs.TABS.register(modEventBus);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT,()->()->{
             modEventBus.addListener(this::registerRenderers);
+            modEventBus.addListener(this::onRegisterAdditionalModels);
         });
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
     }
 
 
     @OnlyIn(Dist.CLIENT)
     public void registerRenderers(FMLCommonSetupEvent event){
+
         EntityRenderers.register(CVNEntityType.FEATHER_PROJECTILE.get(), FeatherRenderer::new);
         EntityRenderers.register(CVNEntityType.HARPY.get(), HarpyRenderer::new);
+        EntityRenderers.register(CVNEntityType.RAY.get(), MetalGearRayRenderer::new);
         EntityRenderers.register(CVNEntityType.ELDER_HARPY.get(), ElderHarpyRenderer::new);
     }
-
+    public void onRegisterAdditionalModels(ModelEvent.RegisterAdditional event) {
+        event.register(new ResourceLocation(MODID, "models/entity/ray.obj"));
+    }
 }

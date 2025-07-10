@@ -178,7 +178,7 @@ public class HarpyModel<T extends HarpyEntity> extends HierarchicalModel<T> {
 		this.animate(entity.attackRange,HarpyAnimations.HARPY_RANGED,ageInTicks,1.0F);
 		this.animate(entity.attackMelee,HarpyAnimations.HARPY_MELEE,ageInTicks,1.0F);
 		if(entity.isSitting()){
-			this.main.y=13F;
+			this.main.y=13.0F;
 		}else {
 			this.main.y=0.0F;
 		}

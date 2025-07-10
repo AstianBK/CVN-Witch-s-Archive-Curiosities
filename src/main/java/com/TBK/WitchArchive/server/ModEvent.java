@@ -24,6 +24,8 @@ public class ModEvent {
                 Mob::checkMobSpawnRules);
 
         event.put(CVNEntityType.ELDER_HARPY.get(), ElderHarpyEntity.setAttributes());
+        event.put(CVNEntityType.RAY.get(), ElderHarpyEntity.setAttributes());
+
         event.put(CVNEntityType.HARPY.get(), HarpyEntity.setAttributes());
     }
 
