@@ -4,7 +4,7 @@ package com.TBK.WitchArchive.client.model;// Made with Blockbench 4.12.4
 
 
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
-import com.TBK.WitchArchive.client.animations.MetalGearRayAnimations;
+import com.TBK.WitchArchive.client.animations.MetalGearRayAnim;
 import com.TBK.WitchArchive.common.entity.MetalGearRayEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -14,6 +14,7 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Pose;
 
 public class MetalGearRayModel<T extends MetalGearRayEntity> extends HierarchicalModel<T> {
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
@@ -431,10 +432,29 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 	@Override
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		this.root().getAllParts().forEach(ModelPart::resetPose);
-		this.animate(entity.idle,MetalGearRayAnimations.idlebody,ageInTicks,1.0F);
-		this.animate(entity.idle,MetalGearRayAnimations.idlelegs,ageInTicks,1.0F);
-		this.animate(entity.idle,MetalGearRayAnimations.idletail,ageInTicks,1.0F);
-		this.animateWalk(MetalGearRayAnimations.walkbody,limbSwing,limbSwingAmount,1.0F,2.0F);
+
+		this.animate(entity.idle, MetalGearRayAnim.idlebody,ageInTicks,1.0F);
+		this.animate(entity.idle,MetalGearRayAnim.idlelegs,ageInTicks,1.0F);
+		this.animate(entity.idle,MetalGearRayAnim.idletail,ageInTicks,1.0F);
+
+		this.animate(entity.tower_on,MetalGearRayAnim.turreton,ageInTicks,1.0F);
+		this.animate(entity.tower_off,MetalGearRayAnim.turretoff,ageInTicks,1.0F);
+
+		this.animate(entity.blade_on,MetalGearRayAnim.bladeon,ageInTicks,1.0F);
+		this.animate(entity.blade_off,MetalGearRayAnim.bladeoff,ageInTicks,1.0F);
+
+		this.animateWalk(MetalGearRayAnim.walkbody,limbSwing,limbSwingAmount,2.0F,2.0F);
+		this.animateWalk(MetalGearRayAnim.walklegs,limbSwing,limbSwingAmount,2.0F,2.0F);
+		this.animateWalk(MetalGearRayAnim.walktail,limbSwing,limbSwingAmount,2.0F,2.0F);
+		if(entity.stomp.isStarted()){
+			this.LeftLeg.getAllParts().forEach(ModelPart::resetPose);
+			this.RightLeg.getAllParts().forEach(ModelPart::resetPose);
+		}
+		this.animate(entity.stomp,MetalGearRayAnim.stomp,ageInTicks,1.0F);
+
+		this.animate(entity.meleeAttack,MetalGearRayAnim.stomp,ageInTicks,1.0F);
+		this.animate(entity.prepare_laser,MetalGearRayAnim.lazer,ageInTicks,1.0F);
+		this.animate(entity.laser,MetalGearRayAnim.lazerloop,ageInTicks,1.0F);
 	}
 
 	@Override

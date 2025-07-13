@@ -25,7 +25,7 @@ public class CVNEntityType {
     public static final RegistryObject<EntityType<MetalGearRayEntity>> RAY =
             ENTITY_TYPES.register("ray",
                     () -> EntityType.Builder.of(MetalGearRayEntity::new, MobCategory.MONSTER)
-                            .sized(10f, 10f)
+                            .sized(1f, 1f)
                             .build(new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "ray").toString()));
 
     public static final RegistryObject<EntityType<ElderHarpyEntity>> ELDER_HARPY =

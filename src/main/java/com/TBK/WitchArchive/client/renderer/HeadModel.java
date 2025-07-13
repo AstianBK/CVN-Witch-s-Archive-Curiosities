@@ -1,7 +1,7 @@
 package com.TBK.WitchArchive.client.renderer;
 
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
-import com.TBK.WitchArchive.client.animations.MetalGearRayAnimations;
+import com.TBK.WitchArchive.client.animations.MetalGearRayAnim;
 import com.TBK.WitchArchive.client.model.MetalGearRayModel;
 import com.TBK.WitchArchive.common.entity.MetalGearRayEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -50,52 +50,25 @@ public class HeadModel <T extends MetalGearRayEntity, M extends MetalGearRayMode
         ModelPart part = this.getParentModel().getHeadObj();
         ModelPart part1 = this.getParentModel().getTorso();
 
-        double size = 1.0F;
         StandaloneGeometryBakingContext renderable=StandaloneGeometryBakingContext.create(OBJ_MODEL);
         ITextureRenderTypeLookup renderTypeLookup = RenderType::entityCutout;
         p_117349_.pushPose();
-        p_117349_.mulPose(Axis.ZP.rotationDegrees(180.0F+part.xRot));
-        double fy1 = (double) (Math.cos((double) (part.xRot*180.0D/Math.PI))*size);
-        part1.translateAndRotate(p_117349_);
-        p_117349_.translate(0,4,0);
-        this.animation(part,this.getElapsedSeconds(MetalGearRayAnimations.idlebody,p_117352_.idle.getAccumulatedTime()),p_117349_,p_117352_);
+        p_117349_.mulPose(Axis.ZP.rotationDegrees(180.0F));
+
+        this.animation(part,part1,this.getElapsedSeconds(MetalGearRayAnim.idlebody,p_117352_.idle.getAccumulatedTime()),p_117349_,p_117352_);
         this.model.bakeRenderable(renderable).render(p_117349_,p_117350_,renderTypeLookup,p_117351_, OverlayTexture.NO_OVERLAY,1.0F, CompositeRenderable.Transforms.EMPTY);
         p_117349_.popPose();
     }
 
-    public void animation(ModelPart part,float f,PoseStack stack,T animatable){
-        Optional<ModelPart> optional = Optional.of(part);
-        List<AnimationChannel> list = MetalGearRayAnimations.idlebody.boneAnimations().get("Torso");
-        optional.ifPresent((p_232330_) -> {
-            list.forEach((p_288241_) -> {
-                Keyframe[] akeyframe = p_288241_.keyframes();
-                int i = Math.max(0, Mth.binarySearch(0, akeyframe.length, (p_232315_) -> {
-                    return f <= akeyframe[p_232315_].timestamp();
-                }) - 1);
-                int j = Math.min(akeyframe.length - 1, i + 1);
-                Keyframe keyframe = akeyframe[i];
-                Keyframe keyframe1 = akeyframe[j];
-                float f1 = f - keyframe.timestamp();
-                float f2;
-                if (j != i) {
-                    f2 = Mth.clamp(f1 / (keyframe1.timestamp() - keyframe.timestamp()), 0.0F, 1.0F);
-                } else {
-                    f2 = 0.0F;
-                }
-
-
-                keyframe1.interpolation().apply(VECTOR_CACHE, f2, akeyframe, i, j, 1.0F);
-                Vector3f vector3f = new Vector3f((float) animatable.getX(), (float) (animatable.getY()-animatable.getEyeHeight()-2.5F), (float) (animatable.getZ()-6.5F));
-                //CVNWitchArchiveCuriosities.LOGGER.debug("BEFORE VECTOR :"+vector3f);
-
-                vector3f = vector3f.rotate(new Quaternionf(VECTOR_CACHE.x,VECTOR_CACHE.y,VECTOR_CACHE.z,1.0F));
-                //CVNWitchArchiveCuriosities.LOGGER.debug("AFTER VECTOR :"+vector3f);
-
-                //stack.translate(vector3f.x,vector3f.y,vector3f.z);
-
-                //stack.translate(0.0F,fy,VECTOR_CACHE.z);
-            });
-        });
+    public void animation(ModelPart part,ModelPart part1,float f,PoseStack stack,T animatable){
+        stack.translate(part1.x/16.0D,15+part1.y/16.0D,part1.z/16.0D);
+        if (part1.xRot != 0.0F || part1.yRot != 0.0F || part1.zRot != 0.0F) {
+            stack.mulPose((new Quaternionf()).rotationZYX(-part1.zRot , part1.yRot, -part1.xRot));
+        }
+        stack.translate(0,0.25,-8.0D);
+        if (part.xRot != 0.0F || part.yRot != 0.0F || part.zRot != 0.0F) {
+            stack.mulPose((new Quaternionf()).rotationZYX(-part.zRot , part.yRot, -part.xRot));
+        }
     }
 
     public float getElapsedSeconds(AnimationDefinition p_232317_, long p_232318_) {
