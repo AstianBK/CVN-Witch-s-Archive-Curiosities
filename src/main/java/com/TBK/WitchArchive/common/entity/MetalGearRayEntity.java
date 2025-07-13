@@ -83,7 +83,6 @@ public class MetalGearRayEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        this.goalSelector.addGoal(5,new RandomStrollGoal(this,1.0D));
         this.goalSelector.addGoal(3,new RayAttackGoal(this,2.0D,false));
         this.targetSelector.addGoal(4,new NearestAttackableTargetGoal<>(this,LivingEntity.class,false));
     }
@@ -117,15 +116,15 @@ public class MetalGearRayEntity extends PathfinderMob {
             float sin = (float)Math.sin(yawRad);
             float cos = (float)Math.cos(yawRad);
 
-            // Pierna 1: adelante derecha
+            // torre 1: adelante derecha
             double leg0X =  ( 2 * cos) + ( -4 * sin);
             double leg0Z =  ( 2 * sin) - ( -4 * cos);
 
-            // Pierna 2: atrás izquierda
+            // torre 2: atrás izquierda
             double leg1X =  ( -2 * cos) + ( -4 * sin);
             double leg1Z =  ( -2 * sin) - ( -4 * cos);
 
-            // Pierna 3: atrás derecha
+            // torre 3: atrás derecha
             double leg2X =  - ( 4 * cos);
             double leg2Z =  - ( 4 * sin);
 
@@ -299,7 +298,7 @@ public class MetalGearRayEntity extends PathfinderMob {
         this.entityData.define(ATTACKING,false);
         this.entityData.define(BLADE_ON,false);
         this.entityData.define(TOWER_ON,false);
-
+        this.entityData.define(LASER,false);
     }
 
     @Override
@@ -336,15 +335,22 @@ public class MetalGearRayEntity extends PathfinderMob {
         }
 
         @Override
+        public void start() {
+            super.start();
+            MetalGearRayEntity.this.setTowerOn(false);
+            MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 8);
+        }
+
+        @Override
         public void tick() {
             super.tick();
-            if(!MetalGearRayEntity.this.isAggressive()){
-                MetalGearRayEntity.this.setTowerOn(false);
-                MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 8);
-            }else {
-                MetalGearRayEntity.this.setTowerOn(true);
-                MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 12);
-            }
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            MetalGearRayEntity.this.setTowerOn(true);
+            MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 12);
         }
 
         @Override

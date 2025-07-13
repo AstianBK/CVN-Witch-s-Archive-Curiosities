@@ -443,6 +443,10 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		this.animate(entity.blade_on,MetalGearRayAnim.bladeon,ageInTicks,1.0F);
 		this.animate(entity.blade_off,MetalGearRayAnim.bladeoff,ageInTicks,1.0F);
 
+		if(!(limbSwingAmount > -0.15F && limbSwingAmount < 0.15F)){
+			this.LeftLeg.getAllParts().forEach(ModelPart::resetPose);
+			this.RightLeg.getAllParts().forEach(ModelPart::resetPose);
+		}
 		this.animateWalk(MetalGearRayAnim.walkbody,limbSwing,limbSwingAmount,2.0F,2.0F);
 		this.animateWalk(MetalGearRayAnim.walklegs,limbSwing,limbSwingAmount,2.0F,2.0F);
 		this.animateWalk(MetalGearRayAnim.walktail,limbSwing,limbSwingAmount,2.0F,2.0F);
