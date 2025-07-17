@@ -20,6 +20,7 @@ public class TowerPart<T extends MetalGearRayEntity> extends PartEntity<T> {
         this.parentMob = parent;
         this.name = name;
         this.size = EntityDimensions.scalable(sizeX,sizeZ);
+        this.setSize(this.size);
     }
     protected void setSize(EntityDimensions size) {
         this.size = size;

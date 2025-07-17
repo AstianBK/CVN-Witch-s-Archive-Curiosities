@@ -6,11 +6,11 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.Level;
@@ -47,8 +47,11 @@ public class MetalGearRayEntity extends PathfinderMob {
     private final TowerPart<?> tower1;
     private final TowerPart<?> tower2;
     private final TowerPart<?> tower3;
+    private final TowerPart<?> head;
     private final TowerPart<?> body;
     private final TowerPart<?>[] towers;
+    private final TowerPart<?>[] bodyParts;
+    private final TowerPart<?>[] parts;
     public Vec3 laserPosition = Vec3.ZERO;
     public int prepareLaserTimer = 0;
     public int laserTimer = 0;
@@ -58,16 +61,19 @@ public class MetalGearRayEntity extends PathfinderMob {
         this.tower1=new TowerPart<>(this,"tower1",1,1);
         this.tower2=new TowerPart<>(this,"tower2",1,1);
         this.tower3=new TowerPart<>(this,"tower3",1,1);
+        this.head = new TowerPart<>(this,"head",3,3);
         this.body = new TowerPart<>(this,"body",10,10);
 
         this.towers = new TowerPart[]{this.tower0,this.tower1,this.tower2,this.tower3};
-        this.setId(ENTITY_COUNTER.getAndAdd(this.towers.length + 2) + 1);
+        this.bodyParts = new TowerPart[]{this.body,this.head};
+        this.parts = new TowerPart[]{this.tower0,this.tower1,this.tower2,this.tower3,this.body,this.head};
+        this.setId(ENTITY_COUNTER.getAndAdd(this.parts.length + 1) + 1);
     }
     @Override
     public void setId(int p_20235_) {
         super.setId(p_20235_);
-        for (int i = 0; i < this.towers.length; i++) // Forge: Fix MC-158205: Set part ids to successors of parent mob id
-            this.towers[i].setId(p_20235_ + i + 1);
+        for (int i = 0; i < this.parts.length; i++) // Forge: Fix MC-158205: Set part ids to successors of parent mob id
+            this.parts[i].setId(p_20235_ + i + 1);
     }
 
     public static AttributeSupplier setAttributes() {
@@ -87,6 +93,10 @@ public class MetalGearRayEntity extends PathfinderMob {
         this.targetSelector.addGoal(4,new NearestAttackableTargetGoal<>(this,LivingEntity.class,false));
     }
 
+    public Vec3 getHeadPos(float partialTicks){
+        return new Vec3(this.head.getX(),this.head.getY(),this.head.getZ());
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -103,7 +113,30 @@ public class MetalGearRayEntity extends PathfinderMob {
             }
         }
 
+        float yawRad = (float)Math.toRadians(this.getYRot());
+        float sin = (float)Math.sin(yawRad);
+        float cos = (float)Math.cos(yawRad);
+
+        double body0X =  (-7 * sin);
+        double body0Z = -(-7 * cos);
+
+        Vec3[] pos = new Vec3[this.bodyParts.length];
+        for (int j = 0 ; j<this.bodyParts.length ; j++){
+            pos[j]=new Vec3(this.bodyParts[j].getX(), this.bodyParts[j].getY(), this.bodyParts[j].getZ());
+        }
+
+        this.tickPart(this.head,body0X,7,body0Z);
         this.tickPart(this.body,0,0,0);
+
+        for (int k = 0 ; k<this.bodyParts.length ; k++){
+            this.bodyParts[k].xo = pos[k].x;
+            this.bodyParts[k].yo = pos[k].y;
+            this.bodyParts[k].zo = pos[k].z;
+            this.bodyParts[k].xOld = pos[k].x;
+            this.bodyParts[k].yOld = pos[k].y;
+            this.bodyParts[k].zOld = pos[k].z;
+        }
+
         if(this.towerOn()){
             Vec3[] avec3 = new Vec3[this.towers.length];
 
@@ -112,9 +145,6 @@ public class MetalGearRayEntity extends PathfinderMob {
             }
 
             // Rotación enY ( horizontal)
-            float yawRad = (float)Math.toRadians(this.getYRot());
-            float sin = (float)Math.sin(yawRad);
-            float cos = (float)Math.cos(yawRad);
 
             // torre 1: adelante derecha
             double leg0X =  ( 2 * cos) + ( -4 * sin);
@@ -132,10 +162,12 @@ public class MetalGearRayEntity extends PathfinderMob {
             double leg3X =  - ( -4 * cos);
             double leg3Z =  - ( -4 * sin);
 
+
             this.tickPart(this.tower0,leg0X, 9,leg0Z);
             this.tickPart(this.tower1,leg1X,9,leg1Z);
             this.tickPart(this.tower2,leg2X,8,leg2Z);
             this.tickPart(this.tower3,leg3X,8,leg3Z);
+
 
 
             for(int l = 0; l < this.towers.length; ++l) {
@@ -151,11 +183,26 @@ public class MetalGearRayEntity extends PathfinderMob {
 
         if(this.prepareLaserTimer>0 && this.getTarget()!=null){
             this.prepareLaserTimer--;
+            if (!this.level().isClientSide ){
+                this.setPos(this.position());
+
+                Vec3 vec32 = this.getTarget().position().subtract(this.getEyePosition());
+                double f5 = -Math.toDegrees(Math.atan2(vec32.y,Math.sqrt(vec32.x*vec32.x + vec32.z*vec32.z)));
+                double f6 = Math.toDegrees(Math.atan2(vec32.z, vec32.x)) - 90.0F;
+                this.yHeadRot=(float)f6;
+                this.setYHeadRot((float) f6);
+                this.yBodyRot= (float) (f6);
+                this.setYRot((float) f6);
+                this.setXRot((float) f5);
+                this.setRot(this.getYRot(),this.getXRot());
+            }
             if(this.prepareLaserTimer==0){
-                this.setLaser(true);
                 if(!this.level().isClientSide){
+                    this.setLaser(true);
+                    this.laserPosition = this.getTarget().position();
                     PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.getTarget().getX(), (int) this.getTarget().getY(), (int) this.getTarget().getZ()),this);
                 }else {
+                    this.idleAnimationTimeout = 2000;
                     this.prepare_laser.stop();
                     this.laser.start(this.tickCount);
                 }
@@ -165,8 +212,16 @@ public class MetalGearRayEntity extends PathfinderMob {
 
         if(this.isLaser()){
             this.laserTimer--;
-            this.setLaser(false);
-            if(this.laserPosition!=null){
+            this.getNavigation().stop();
+            if(!this.level().isClientSide && (this.getTarget() == null || this.getTarget().isAlive())){
+                LivingEntity livingEntity = this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(30.0D)).stream().findFirst().orElse(null);
+                if(livingEntity!=null){
+                    this.setTarget(livingEntity);
+                    this.laserPosition = livingEntity.position();
+                    PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.getTarget().getX(), (int) this.getTarget().getY(), (int) this.getTarget().getZ()),this);
+                }
+            }
+            if(!this.level().isClientSide && this.laserPosition!=null){
                 this.setPos(this.position());
 
                 Vec3 vec32 = this.laserPosition.subtract(this.getEyePosition());
@@ -178,6 +233,9 @@ public class MetalGearRayEntity extends PathfinderMob {
                 this.setYRot((float) f6);
                 this.setXRot((float) f5);
                 this.setRot(this.getYRot(),this.getXRot());
+            }
+            if(this.laserTimer<=0){
+                this.setLaser(false);
             }
         }
         if(this.isAttacking()){
@@ -193,11 +251,21 @@ public class MetalGearRayEntity extends PathfinderMob {
         }
     }
 
+    @Override
+    public boolean is(Entity p_20356_) {
+        for (int j=0 ; j<this.getParts().length ; j++){
+            if(this.getParts()[j]==p_20356_){
+                return true;
+            }
+        }
+        return super.is(p_20356_);
+    }
+
     public boolean isLaser(){
         return this.entityData.get(LASER);
     }
     public void setLaser(boolean value){
-        this.laserTimer = value ? 200 : 0;
+        this.laserTimer = value ? 2000 : 0;
         this.entityData.set(LASER,value);
     }
 
@@ -245,17 +313,18 @@ public class MetalGearRayEntity extends PathfinderMob {
     public void recreateFromPacket(ClientboundAddEntityPacket p_218825_) {
         super.recreateFromPacket(p_218825_);
         if (true) return; // Forge: Fix MC-158205: Moved into setId()
-        TowerPart<?>[] aenderdragonpart = this.towers;
+        TowerPart<?>[] part = this.parts;
 
-        for(int i = 0; i < aenderdragonpart.length; ++i) {
-            aenderdragonpart[i].setId(i + p_218825_.getId());
+
+        for(int i = 0; i < part.length; ++i) {
+            part[i].setId(i + p_218825_.getId());
         }
 
     }
 
     @Override
     public @Nullable PartEntity<?>[] getParts() {
-        return this.towers;
+        return this.parts;
     }
 
     @Override
@@ -321,7 +390,6 @@ public class MetalGearRayEntity extends PathfinderMob {
             this.setBladeOn(true);
             this.blade_on.start(this.tickCount);
         }else if(p_21375_==13){
-            this.setLaser(true);
             this.prepare_laser.start(this.tickCount);
             this.prepareLaserTimer = 58;
         }
@@ -329,7 +397,9 @@ public class MetalGearRayEntity extends PathfinderMob {
     }
 
     class RayAttackGoal extends MeleeAttackGoal {
-
+        public StratAttack currentAttack = StratAttack.STOMP;
+        public int nextTimerStrat = 0;
+        public int maxTimerStrat = 0;
         public RayAttackGoal(PathfinderMob p_25552_, double p_25553_, boolean p_25554_) {
             super(p_25552_, p_25553_, p_25554_);
         }
@@ -337,21 +407,50 @@ public class MetalGearRayEntity extends PathfinderMob {
         @Override
         public void start() {
             super.start();
-            MetalGearRayEntity.this.setTowerOn(false);
-            MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 8);
+            this.currentAttack = StratAttack.STOMP;
+            this.maxTimerStrat= 200 + MetalGearRayEntity.this.level().random.nextInt(10)*MetalGearRayEntity.this.level().random.nextInt(5);
+        }
+
+        @Override
+        public boolean canUse() {
+            return super.canUse() && !MetalGearRayEntity.this.isLaser();
         }
 
         @Override
         public void tick() {
-            super.tick();
+            StratAttack strat = this.currentAttack;
+            if(strat == StratAttack.STOMP){
+                super.tick();
+            }else {
+                MetalGearRayEntity.this.getNavigation().stop();
+            }
+            if(!MetalGearRayEntity.this.isAttacking() && this.nextTimerStrat++>this.maxTimerStrat){
+                this.nextTimerStrat = 0;
+                this.maxTimerStrat= 20 + MetalGearRayEntity.this.level().random.nextInt(3)*MetalGearRayEntity.this.level().random.nextInt(3);
+                int nextStrat = MetalGearRayEntity.this.random.nextInt(0,1);
+                this.switchStrat(nextStrat);
+            }
         }
 
+        public void switchStrat(int idStrat){
+            switch (idStrat){
+                case 0 ->{
+                    this.currentAttack = StratAttack.LASER;
+                    MetalGearRayEntity.this.prepareLaserTimer = 58;
+                    MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 13);
+                }
+                case 1 ->{
+                    this.currentAttack = StratAttack.STOMP;
+                }
+            }
+        }
         @Override
         public void stop() {
             super.stop();
             MetalGearRayEntity.this.setTowerOn(true);
             MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 12);
         }
+
 
         @Override
         protected void checkAndPerformAttack(LivingEntity p_25557_, double p_25558_) {
@@ -369,6 +468,10 @@ public class MetalGearRayEntity extends PathfinderMob {
             if(!MetalGearRayEntity.this.level().isClientSide){
                 MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 4);
             }
+        }
+        enum StratAttack{
+            LASER,
+            STOMP;
         }
     }
 

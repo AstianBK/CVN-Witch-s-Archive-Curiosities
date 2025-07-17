@@ -56,8 +56,9 @@ public class PacketActionRay implements Packet<PacketListener> {
         Minecraft mc=Minecraft.getInstance();
         assert mc.level!=null;
         Entity dragon=mc.level.getEntity(this.idDragon);
-        if(dragon instanceof MetalGearRayEntity fallenDragon){
-            fallenDragon.laserPosition=new Vec3(x,y,z);
+        if(dragon instanceof MetalGearRayEntity ray){
+            ray.setLaser(true);
+            ray.laserPosition=new Vec3(x,y,z);
         }
     }
 

@@ -34,14 +34,18 @@ import java.util.List;
 import java.util.Optional;
 
 public class HeadModel <T extends MetalGearRayEntity, M extends MetalGearRayModel<T>> extends RenderLayer<T, M> {
-    private static final ResourceLocation OBJ_MODEL = new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "obj/entity/ray_head.obj");
+    private static final ResourceLocation HEAD_MODEL = new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "obj/entity/ray_head.obj");
+    private static final ResourceLocation HEAD_OPEN_MODEL = new ResourceLocation(CVNWitchArchiveCuriosities.MODID, "obj/entity/ray_head_open.obj");
 
     public Vector3f VECTOR_CACHE = new Vector3f();
     private final ObjModel model;
+    private final ObjModel modelOpen;
+
 
     public HeadModel(RenderLayerParent<T, M> p_117346_) {
         super(p_117346_);
-        this.model = ObjLoader.INSTANCE.loadModel(new ObjModel.ModelSettings(OBJ_MODEL,true,true,true,true,"ray_head.mtl"));
+        this.model = ObjLoader.INSTANCE.loadModel(new ObjModel.ModelSettings(HEAD_MODEL,true,true,true,true,"ray_head.mtl"));
+        this.modelOpen = ObjLoader.INSTANCE.loadModel(new ObjModel.ModelSettings(HEAD_OPEN_MODEL,true,true,true,true,"ray_head_open.mtl"));
 
     }
 
@@ -50,13 +54,18 @@ public class HeadModel <T extends MetalGearRayEntity, M extends MetalGearRayMode
         ModelPart part = this.getParentModel().getHeadObj();
         ModelPart part1 = this.getParentModel().getTorso();
 
-        StandaloneGeometryBakingContext renderable=StandaloneGeometryBakingContext.create(OBJ_MODEL);
+        boolean flag = p_117352_.isLaser();
+        StandaloneGeometryBakingContext renderable=StandaloneGeometryBakingContext.create(flag ? HEAD_OPEN_MODEL : HEAD_MODEL);
         ITextureRenderTypeLookup renderTypeLookup = RenderType::entityCutout;
         p_117349_.pushPose();
         p_117349_.mulPose(Axis.ZP.rotationDegrees(180.0F));
 
         this.animation(part,part1,this.getElapsedSeconds(MetalGearRayAnim.idlebody,p_117352_.idle.getAccumulatedTime()),p_117349_,p_117352_);
-        this.model.bakeRenderable(renderable).render(p_117349_,p_117350_,renderTypeLookup,p_117351_, OverlayTexture.NO_OVERLAY,1.0F, CompositeRenderable.Transforms.EMPTY);
+        if(flag){
+            this.modelOpen.bakeRenderable(renderable).render(p_117349_,p_117350_,renderTypeLookup,p_117351_, OverlayTexture.NO_OVERLAY,1.0F, CompositeRenderable.Transforms.EMPTY);
+        }else {
+            this.model.bakeRenderable(renderable).render(p_117349_,p_117350_,renderTypeLookup,p_117351_, OverlayTexture.NO_OVERLAY,1.0F, CompositeRenderable.Transforms.EMPTY);
+        }
         p_117349_.popPose();
     }
 

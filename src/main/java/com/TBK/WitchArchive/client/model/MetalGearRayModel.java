@@ -457,6 +457,9 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		this.animate(entity.stomp,MetalGearRayAnim.stomp,ageInTicks,1.0F);
 
 		this.animate(entity.meleeAttack,MetalGearRayAnim.stomp,ageInTicks,1.0F);
+		if(entity.prepare_laser.isStarted()){
+			this.root().getAllParts().forEach(ModelPart::resetPose);
+		}
 		this.animate(entity.prepare_laser,MetalGearRayAnim.lazer,ageInTicks,1.0F);
 		this.animate(entity.laser,MetalGearRayAnim.lazerloop,ageInTicks,1.0F);
 	}
