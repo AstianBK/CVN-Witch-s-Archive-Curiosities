@@ -61,11 +61,16 @@ public class HeadModel <T extends MetalGearRayEntity, M extends MetalGearRayMode
         p_117349_.mulPose(Axis.ZP.rotationDegrees(180.0F));
 
         this.animation(part,part1,this.getElapsedSeconds(MetalGearRayAnim.idlebody,p_117352_.idle.getAccumulatedTime()),p_117349_,p_117352_);
+        if(p_117352_.isLaser()){
+            p_117349_.mulPose(Axis.YP.rotationDegrees(-(p_117352_.rotHeadY)));
+            p_117349_.mulPose(Axis.XP.rotationDegrees((float) -p_117352_.rotHeadX));
+        }
         if(flag){
             this.modelOpen.bakeRenderable(renderable).render(p_117349_,p_117350_,renderTypeLookup,p_117351_, OverlayTexture.NO_OVERLAY,1.0F, CompositeRenderable.Transforms.EMPTY);
         }else {
             this.model.bakeRenderable(renderable).render(p_117349_,p_117350_,renderTypeLookup,p_117351_, OverlayTexture.NO_OVERLAY,1.0F, CompositeRenderable.Transforms.EMPTY);
         }
+
         p_117349_.popPose();
     }
 

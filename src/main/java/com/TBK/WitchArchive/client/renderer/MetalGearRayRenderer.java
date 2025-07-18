@@ -66,7 +66,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         float shakeByY = (float) Math.sin(ageInTicks * 4F + 1.2F) * 0.075F;
         float shakeByZ = (float) Math.sin(ageInTicks * 4F + 2.4F) * 0.075F;
         Vec3 beamOrigin = jellyfish.getHeadPos(pPartialTicks);
-        Vec3 rawBeamPosition = jellyfish.laserPosition.subtract(beamOrigin);
+        Vec3 rawBeamPosition = jellyfish.getBeamDirection(pPartialTicks);
         float length = (float) rawBeamPosition.length();
         Vec3 vec3 = rawBeamPosition.normalize();
         float xRot = (float) Math.acos(vec3.y);

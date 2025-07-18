@@ -3,10 +3,14 @@ package com.TBK.WitchArchive.common.entity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.network.NetworkHooks;
 
@@ -33,6 +37,14 @@ public class TowerPart<T extends MetalGearRayEntity> extends PartEntity<T> {
     }
 
     protected void addAdditionalSaveData(CompoundTag p_31028_) {
+    }
+
+    @Override
+    public InteractionResult interactAt(Player p_19980_, Vec3 p_19981_, InteractionHand p_19982_) {
+        if(this.parentMob!=null){
+            return this.parentMob.mobInteract(p_19980_,p_19982_);
+        }
+        return super.interactAt(p_19980_, p_19981_, p_19982_);
     }
 
     public boolean isPickable() {

@@ -1,27 +1,43 @@
 package com.TBK.WitchArchive.common.entity;
 
+import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
 import com.TBK.WitchArchive.common.network.PacketHandler;
 import com.TBK.WitchArchive.common.network.messager.PacketActionRay;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.vehicle.DismountHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.entity.PartEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
-public class MetalGearRayEntity extends PathfinderMob {
+public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJumping, RiderShieldingMount  {
     public static final EntityDataAccessor<Boolean> ATTACKING =
             SynchedEntityData.defineId(MetalGearRayEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> LASER =
@@ -55,6 +71,8 @@ public class MetalGearRayEntity extends PathfinderMob {
     public Vec3 laserPosition = Vec3.ZERO;
     public int prepareLaserTimer = 0;
     public int laserTimer = 0;
+    public float rotHeadY = 0.0F;
+    public float rotHeadX = 0.0F;
     public MetalGearRayEntity(EntityType<? extends PathfinderMob> p_21368_, Level p_21369_) {
         super(p_21368_, p_21369_);
         this.tower0=new TowerPart<>(this,"tower0",1,1);
@@ -82,6 +100,7 @@ public class MetalGearRayEntity extends PathfinderMob {
                 .add(Attributes.FOLLOW_RANGE, 45.D)
                 .add(Attributes.MOVEMENT_SPEED, 0.1d)
                 .add(Attributes.ATTACK_DAMAGE,12.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE,1.0F)
                 .build();
 
     }
@@ -94,13 +113,38 @@ public class MetalGearRayEntity extends PathfinderMob {
     }
 
     public Vec3 getHeadPos(float partialTicks){
-        return new Vec3(this.head.getX(),this.head.getY(),this.head.getZ());
+        double x = this.head.getX();
+        double y = this.head.getY();
+        double z = this.head.getZ();
+
+        return new Vec3(x,y,z);
+    }
+
+    public Vec3 getBeamDirection(float partialTicks){
+        Vec3 direction;
+        if(this.isVehicle()){
+            direction = this.getHeadPos(partialTicks).add(this.getControllingPassenger().getLookAngle().scale(50.0D)).subtract(this.getHeadPos(partialTicks));
+        }else {
+            direction = this.laserPosition.subtract(this.getHeadPos(partialTicks));
+        }
+        return direction;
     }
 
     @Override
     public void tick() {
         super.tick();
 
+        if(this.level().getEntities(this,this.body.getBoundingBox().inflate(3.0F)).isEmpty()){
+            this.setTowerOn(false);
+            if(!this.level().isClientSide){
+                this.level().broadcastEntityEvent(this,(byte) 9);
+            }
+        }else {
+            this.setTowerOn(true);
+            if(!this.level().isClientSide){
+                this.level().broadcastEntityEvent(this,(byte) 12);
+            }
+        }
         if(this.towerOn()){
             for (TowerPart<?> leg : this.towers) {
                 leg.tick();
@@ -178,12 +222,15 @@ public class MetalGearRayEntity extends PathfinderMob {
                 this.towers[l].yOld = avec3[l].y;
                 this.towers[l].zOld = avec3[l].z;
             }
-            this.checkTick();
+            if(!this.isVehicle()){
+                this.checkTick();
+            }
         }
 
-        if(this.prepareLaserTimer>0 && this.getTarget()!=null){
+        if(this.prepareLaserTimer>0){
             this.prepareLaserTimer--;
-            if (!this.level().isClientSide ){
+            this.getNavigation().stop();
+            if (!this.level().isClientSide && this.getTarget()!=null){
                 this.setPos(this.position());
 
                 Vec3 vec32 = this.getTarget().position().subtract(this.getEyePosition());
@@ -199,8 +246,13 @@ public class MetalGearRayEntity extends PathfinderMob {
             if(this.prepareLaserTimer==0){
                 if(!this.level().isClientSide){
                     this.setLaser(true);
-                    this.laserPosition = this.getTarget().position();
-                    PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.getTarget().getX(), (int) this.getTarget().getY(), (int) this.getTarget().getZ()),this);
+                    if(this.isVehicle()){
+                        this.laserPosition=null;
+                        this.level().broadcastEntityEvent(this,(byte) 14);
+                    }else if(this.getTarget()!=null){
+                        this.laserPosition = this.getTarget().position();
+                        PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.getTarget().getX(), (int) this.getTarget().getY(), (int) this.getTarget().getZ()),this);
+                    }
                 }else {
                     this.idleAnimationTimeout = 2000;
                     this.prepare_laser.stop();
@@ -213,26 +265,49 @@ public class MetalGearRayEntity extends PathfinderMob {
         if(this.isLaser()){
             this.laserTimer--;
             this.getNavigation().stop();
-            if(!this.level().isClientSide && (this.getTarget() == null || this.getTarget().isAlive())){
-                LivingEntity livingEntity = this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(30.0D)).stream().findFirst().orElse(null);
-                if(livingEntity!=null){
-                    this.setTarget(livingEntity);
-                    this.laserPosition = livingEntity.position();
-                    PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.getTarget().getX(), (int) this.getTarget().getY(), (int) this.getTarget().getZ()),this);
+            if(this.isVehicle()){
+                Vec3 direction = this.getBeamDirection(1.0F);
+                BlockHitResult result = this.level().clip(new ClipContext(this.getHeadPos(1.0F),direction, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
+                if(this.tickCount%10 == 0){
+                    EntityHitResult hit = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(1.0F),this.getHeadPos(1.0F).add(this.getControllingPassenger().getLookAngle().scale(50.0D)),this.getBoundingBox().inflate(50.0F),e->!this.is(e),3.0F);
+                    if(hit!=null && hit.getEntity() instanceof  LivingEntity){
+                        LivingEntity entity = (LivingEntity) hit.getEntity();
+                        if(entity.hurt(this.damageSources().magic(),3.0F)){
+                            entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,3,10));
+                        }
+                    }
                 }
-            }
-            if(!this.level().isClientSide && this.laserPosition!=null){
-                this.setPos(this.position());
+            }else {
+                if(this.tickCount%10 == 0){
+                    EntityHitResult hit = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(1.0F),this.laserPosition,this.getBoundingBox().inflate(50.0F),e->!this.is(e),3.0F);
+                    if(hit!=null && hit.getEntity() instanceof  LivingEntity){
+                        LivingEntity entity = (LivingEntity) hit.getEntity();
+                        if(entity.hurt(this.damageSources().magic(),3.0F)){
+                            entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,3,10));
+                        }
+                    }
+                }
+                if(!this.level().isClientSide && (this.getTarget() == null || this.getTarget().isAlive())){
+                    LivingEntity livingEntity = this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(30.0D)).stream().findFirst().orElse(null);
+                    if(livingEntity!=null){
+                        this.setTarget(livingEntity);
+                        this.laserPosition = livingEntity.position();
+                        PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.getTarget().getX(), (int) this.getTarget().getY(), (int) this.getTarget().getZ()),this);
+                    }
+                }
+                if(!this.level().isClientSide && this.laserPosition!=null){
+                    this.setPos(this.position());
 
-                Vec3 vec32 = this.laserPosition.subtract(this.getEyePosition());
-                double f5 = -Math.toDegrees(Math.atan2(vec32.y,Math.sqrt(vec32.x*vec32.x + vec32.z*vec32.z)));
-                double f6 = Math.toDegrees(Math.atan2(vec32.z, vec32.x)) - 90.0F;
-                this.yHeadRot=(float)f6;
-                this.setYHeadRot((float) f6);
-                this.yBodyRot= (float) (f6);
-                this.setYRot((float) f6);
-                this.setXRot((float) f5);
-                this.setRot(this.getYRot(),this.getXRot());
+                    Vec3 vec32 = this.laserPosition.subtract(this.getEyePosition());
+                    double f5 = -Math.toDegrees(Math.atan2(vec32.y,Math.sqrt(vec32.x*vec32.x + vec32.z*vec32.z)));
+                    double f6 = Math.toDegrees(Math.atan2(vec32.z, vec32.x)) - 90.0F;
+                    this.yHeadRot=(float)f6;
+                    this.setYHeadRot((float) f6);
+                    this.yBodyRot= (float) (f6);
+                    this.setYRot((float) f6);
+                    this.setXRot((float) f5);
+                    this.setRot(this.getYRot(),this.getXRot());
+                }
             }
             if(this.laserTimer<=0){
                 this.setLaser(false);
@@ -251,6 +326,129 @@ public class MetalGearRayEntity extends PathfinderMob {
         }
     }
 
+    public  EntityHitResult getBeamEntityHitResult(Level p_150176_, Entity p_150177_, Vec3 p_150178_, Vec3 p_150179_, AABB p_150180_, Predicate<Entity> p_150181_, float p_150182_) {
+        double d0 = Double.MAX_VALUE;
+        Entity entity = null;
+
+        for(Entity entity1 : p_150176_.getEntities(p_150177_, p_150180_, p_150181_)) {
+            AABB aabb = entity1.getBoundingBox().inflate((double)p_150182_);
+            Optional<Vec3> optional = aabb.clip(p_150178_, p_150179_);
+            if (optional.isPresent()) {
+                double d1 = p_150178_.distanceToSqr(optional.get());
+                if (d1 < d0) {
+                    entity = entity1;
+                    d0 = d1;
+                }
+            }
+        }
+        return entity == null ? null : new EntityHitResult(entity);
+    }
+    @Override
+    public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
+        this.doPlayerRide(p_27584_);
+        return super.mobInteract(p_27584_, p_27585_);
+    }
+
+    @javax.annotation.Nullable
+    public LivingEntity getControllingPassenger() {
+        for(Entity entity:this.getPassengers()){
+            return (LivingEntity) entity;
+        }
+        return null;
+    }
+
+    @javax.annotation.Nullable
+    private Vec3 getDismountLocationInDirection(Vec3 p_30562_, LivingEntity p_30563_) {
+        double d0 = this.getX() + p_30562_.x;
+        double d1 = this.getBoundingBox().minY;
+        double d2 = this.getZ() + p_30562_.z;
+        BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+
+        for(Pose pose : p_30563_.getDismountPoses()) {
+            blockpos$mutableblockpos.set(d0, d1, d2);
+            double d3 = this.getBoundingBox().maxY + 0.75D;
+
+            while(true) {
+                double d4 = this.level().getBlockFloorHeight(blockpos$mutableblockpos);
+                if ((double)blockpos$mutableblockpos.getY() + d4 > d3) {
+                    break;
+                }
+
+                if (DismountHelper.isBlockFloorValid(d4)) {
+                    AABB aabb = p_30563_.getLocalBoundsForPose(pose);
+                    Vec3 vec3 = new Vec3(d0, (double)blockpos$mutableblockpos.getY() + d4, d2);
+                    if (DismountHelper.canDismountTo(this.level(), p_30563_, aabb.move(vec3))) {
+                        p_30563_.setPose(pose);
+                        return vec3;
+                    }
+                }
+
+                blockpos$mutableblockpos.move(Direction.UP);
+                if (!((double)blockpos$mutableblockpos.getY() < d3)) {
+                    break;
+                }
+            }
+        }
+
+        return null;
+    }
+    protected void doPlayerRide(Player pPlayer) {
+        if (!this.level().isClientSide) {
+            pPlayer.setYRot(this.getYRot());
+            pPlayer.setXRot(this.getXRot());
+            pPlayer.startRiding(this);
+        }
+    }
+    public void travel(Vec3 pTravelVector) {
+        LivingEntity livingentity = (LivingEntity) this.getControllingPassenger();
+        if (this.isAlive()) {
+            if (this.isVehicle() && livingentity!=null && !this.isImmobile()) {
+                if(!this.isLaser()){
+                    this.setYRot(livingentity.getYRot());
+                    this.yRotO = this.getYRot();
+                    this.setXRot(livingentity.getXRot() * 0.5F);
+                    this.setRot(this.getYRot(), this.getXRot());
+                    this.yBodyRot = this.getYRot();
+                    this.yHeadRot = this.yBodyRot;
+                    float f = livingentity.xxa * 0.5F;
+                    float f1 = livingentity.zza;
+                    if (f1 <= 0.0F) {
+                        f1 *= 0.25F;
+                    }
+
+                    if (this.isControlledByLocalInstance()) {
+                        float f0 =  (float) this.getAttributeValue(Attributes.MOVEMENT_SPEED)/3 ;
+                        this.setSpeed(f0);
+                        super.travel(new Vec3((double) f, pTravelVector.y, (double) f1));
+                    } else if (livingentity instanceof Player) {
+                        this.setDeltaMovement(Vec3.ZERO);
+                    }
+                }else {
+                    this.rotHeadY = livingentity.getYRot() - this.getYRot();
+                    //this.yRotO = this.getYRot();
+                    this.rotHeadX = livingentity.getXRot() * 0.5F;
+                    //this.setRot(this.getYRot(), this.getXRot());
+                    //this.yBodyRot = this.getYRot();
+                    //this.yHeadRot = this.yBodyRot;
+                }
+                this.calculateEntityAnimation( false);
+                this.tryCheckInsideBlocks();
+            } else {
+                super.travel(pTravelVector);
+            }
+        }
+    }
+
+    @Override
+    public void positionRider(Entity pPassenger, MoveFunction moveFunction) {
+        super.positionRider(pPassenger, moveFunction);
+        if( this.getControllingPassenger()==pPassenger){
+            if (pPassenger instanceof Mob mob) {
+                this.yBodyRot = mob.yBodyRot;
+            }
+            pPassenger.setPos(this.getHeadPos(1.0F));
+        }
+    }
     @Override
     public boolean is(Entity p_20356_) {
         for (int j=0 ; j<this.getParts().length ; j++){
@@ -264,6 +462,7 @@ public class MetalGearRayEntity extends PathfinderMob {
     public boolean isLaser(){
         return this.entityData.get(LASER);
     }
+
     public void setLaser(boolean value){
         this.laserTimer = value ? 2000 : 0;
         this.entityData.set(LASER,value);
@@ -392,8 +591,38 @@ public class MetalGearRayEntity extends PathfinderMob {
         }else if(p_21375_==13){
             this.prepare_laser.start(this.tickCount);
             this.prepareLaserTimer = 58;
+        }else if(p_21375_==14){
+            this.setLaser(true);
         }
         super.handleEntityEvent(p_21375_);
+    }
+
+    @Override
+    public void onPlayerJump(int p_21696_) {
+
+    }
+
+    @Override
+    public boolean canJump() {
+        return true;
+    }
+
+    @Override
+    public void handleStartJump(int p_21695_) {
+        if(!this.level().isClientSide){
+            this.level().broadcastEntityEvent(this,(byte) 13);
+            this.prepareLaserTimer = 58;
+        }
+    }
+
+    @Override
+    public void handleStopJump() {
+
+    }
+
+    @Override
+    public double getRiderShieldingHeight() {
+        return 0;
     }
 
     class RayAttackGoal extends MeleeAttackGoal {
@@ -447,7 +676,6 @@ public class MetalGearRayEntity extends PathfinderMob {
         @Override
         public void stop() {
             super.stop();
-            MetalGearRayEntity.this.setTowerOn(true);
             MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 12);
         }
 
