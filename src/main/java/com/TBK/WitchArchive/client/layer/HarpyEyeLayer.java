@@ -18,6 +18,6 @@ public class HarpyEyeLayer<T extends HarpyEntity, M extends HarpyModel<T>> exten
 
     @Override
     public RenderType renderType() {
-        return RenderType.eyes(EYE);
+        return RenderType.entityTranslucentEmissive(EYE);
     }
 }
