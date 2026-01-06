@@ -3,12 +3,9 @@ package com.TBK.WitchArchive.server;
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
 import com.TBK.WitchArchive.common.entity.ElderHarpyEntity;
 import com.TBK.WitchArchive.common.entity.HarpyEntity;
-import com.TBK.WitchArchive.common.entity.MetalGearRayEntity;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,7 +22,6 @@ public class ModEvent {
                 Mob::checkMobSpawnRules);
 
         event.put(CVNEntityType.ELDER_HARPY.get(), ElderHarpyEntity.setAttributes());
-        event.put(CVNEntityType.RAY.get(), MetalGearRayEntity.setAttributes());
 
         event.put(CVNEntityType.HARPY.get(), HarpyEntity.setAttributes());
     }

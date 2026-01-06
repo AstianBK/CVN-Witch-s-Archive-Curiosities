@@ -18,7 +18,7 @@ public class Config
 {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     private static final ForgeConfigSpec.IntValue HARPY_WEIGHT = BUILDER
-            .comment("Whether collateral damage caused by tamed Netherite Forges damages owners")
+            .comment("Spawn weight of Harpies")
             .defineInRange("harpy_weight", 2,0,100);
 
 

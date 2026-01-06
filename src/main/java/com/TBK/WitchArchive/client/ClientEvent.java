@@ -2,7 +2,6 @@ package com.TBK.WitchArchive.client;
 
 import com.TBK.WitchArchive.CVNWitchArchiveCuriosities;
 import com.TBK.WitchArchive.client.model.HarpyModel;
-import com.TBK.WitchArchive.client.model.MetalGearRayModel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -19,7 +18,6 @@ public class ClientEvent {
     @SubscribeEvent
     public static void registerLayerDefinition(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(HarpyModel.LAYER_LOCATION,HarpyModel::createBodyLayer);
-        event.registerLayerDefinition(MetalGearRayModel.LAYER_LOCATION,MetalGearRayModel::createBodyLayer);
 
     }
 

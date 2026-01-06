@@ -1,8 +1,6 @@
 package com.TBK.WitchArchive.common.network.messager;
 
-import com.TBK.WitchArchive.common.entity.MetalGearRayEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
@@ -43,24 +41,6 @@ public class PacketActionRay implements Packet<PacketListener> {
         buf.writeInt(this.idDragon);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() ->{
-            assert context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT;
-            handlerAnim();
-        });
-        context.get().setPacketHandled(true);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private void handlerAnim() {
-        Minecraft mc=Minecraft.getInstance();
-        assert mc.level!=null;
-        Entity dragon=mc.level.getEntity(this.idDragon);
-        if(dragon instanceof MetalGearRayEntity ray){
-            ray.setLaser(true);
-            ray.laserPosition=new Vec3(x,y,z);
-        }
-    }
 
     @Override
     public void handle(PacketListener p_131342_) {

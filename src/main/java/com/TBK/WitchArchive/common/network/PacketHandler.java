@@ -24,8 +24,6 @@ public class PacketHandler {
 
         MOD_CHANNEL=channel;
 
-        channel.registerMessage(index++, PacketActionRay.class, PacketActionRay::write,
-                PacketActionRay::new, PacketActionRay::handle);
     }
 
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
