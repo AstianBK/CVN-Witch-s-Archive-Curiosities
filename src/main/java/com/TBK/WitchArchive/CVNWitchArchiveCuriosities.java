@@ -66,7 +66,6 @@ public class CVNWitchArchiveCuriosities
 
     @OnlyIn(Dist.CLIENT)
     public void registerRenderers(FMLCommonSetupEvent event){
-
         EntityRenderers.register(CVNEntityType.FEATHER_PROJECTILE.get(), FeatherRenderer::new);
         EntityRenderers.register(CVNEntityType.HARPY.get(), HarpyRenderer::new);
         EntityRenderers.register(CVNEntityType.ELDER_HARPY.get(), ElderHarpyRenderer::new);

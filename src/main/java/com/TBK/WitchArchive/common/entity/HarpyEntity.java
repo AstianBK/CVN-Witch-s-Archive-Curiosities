@@ -1,6 +1,5 @@
 package com.TBK.WitchArchive.common.entity;
 
-import com.TBK.WitchArchive.DefaultBiomes;
 import com.TBK.WitchArchive.common.register.CVNEntityType;
 import com.TBK.WitchArchive.common.register.CVNItems;
 import com.TBK.WitchArchive.server.world.BKBiomeConfig;
@@ -27,8 +26,6 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
-import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.FlyingAnimal;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.player.Player;
@@ -100,11 +97,6 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         }
     }
 
-
-
-
-
-
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(9, new FloatGoal(this));
@@ -129,6 +121,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Husk.class, true));
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Player.class, true));
     }
+
     protected void updateWalkAnimation(float p_268362_) {
         float f;
         if (this.getPose() == Pose.STANDING) {
@@ -146,13 +139,13 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     }
 
     public void chargeState(){
-        int value=this.getSoulEaterEntityFlag();
+        int value=this.getEntityFlag();
         if (value < 2) {
             value++;
         }else {
             value=0;
         }
-        this.setSoulEaterEntityFlag(value);
+        this.setEntityFlag(value);
     }
 
     public DyeColor getColor() {
@@ -163,35 +156,47 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         this.entityData.set(DATA_COLOR, pcolor.getId());
     }
 
-
     @Override
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
         ItemStack stack=p_27584_.getItemInHand(InteractionHand.MAIN_HAND);
-        if(stack.is(Tags.Items.SEEDS) && !this.isTame()){
+        if(!this.isTame()){
+
             if(!this.level().isClientSide){
-                if (this.random.nextInt(3) == 0) {
+                boolean flag = false;
+                if(stack.is(Tags.Items.SEEDS) ){
+                    flag=this.random.nextInt(3) == 0;
+                }else if(isFood(stack)){
+                    flag = true;
+                }
+                if (flag) {
                     this.tame(p_27584_);
                     this.navigation.stop();
                     this.setTarget((LivingEntity)null);
-                    this.setSoulEaterEntityFlag(2);
+                    this.setEntityFlag(2);
                     this.level().broadcastEntityEvent(this, (byte)7);
                 } else {
                     this.level().broadcastEntityEvent(this, (byte)6);
                 }
+
+                if(!p_27584_.getAbilities().instabuild){
+                    stack.shrink(1);
+                }
+                return InteractionResult.CONSUME;
             }
             return super.mobInteract(p_27584_, p_27585_);
         }else if(stack.getItem() instanceof DyeItem item && this.isTame()){
             this.setColor(item.getDyeColor());
             this.playSound(SoundEvents.INK_SAC_USE);
-            return super.mobInteract(p_27584_, p_27585_);
+            return InteractionResult.CONSUME;
         }else if(stack.isEmpty() && this.isTame() && this.isOwnedBy(p_27584_)){
             this.chargeState();
             if(p_27584_.level().isClientSide){
                 p_27584_.displayClientMessage(Component.translatable("harpy."+this.getIdState()),true);
             }
         }
-        return super.mobInteract(p_27584_, p_27585_);
+        return InteractionResult.CONSUME;
     }
+
     public int getIdState(){
         if(this.isSitting()){
             return 2;
@@ -212,11 +217,11 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         return harpy;
     }
 
-    private int getSoulEaterEntityFlag() {
+    private int getEntityFlag() {
         return this.entityData.get(DATA_FLAGS_ID);
     }
 
-    private void setSoulEaterEntityFlag(int pMask) {
+    private void setEntityFlag(int pMask) {
         this.entityData.set(DATA_FLAGS_ID, pMask);
         if(pMask==2){
             double dy=this.level().getHeight(Heightmap.Types.WORLD_SURFACE_WG, (int) this.getX(), (int) this.getZ());
@@ -244,6 +249,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             this.sitting.stop();
         }
     }
+
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> p_146754_) {
         super.onSyncedDataUpdated(p_146754_);
@@ -264,17 +270,17 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
             this.idle.stop();
             this.idleWings.stop();
             this.idleAnimationTimeout=20;
-
         }else {
             super.handleEntityEvent(p_21807_);
         }
     }
 
     public boolean isSitting(){
-        return this.getSoulEaterEntityFlag()==2;
+        return this.getEntityFlag()==2;
     }
+
     public boolean isPatrolling(){
-        return this.getSoulEaterEntityFlag()==1;
+        return this.getEntityFlag()==1;
     }
 
     public int getIdSkin() {
@@ -289,7 +295,6 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
         this.entityData.set(DATA_SKIN, pId);
     }
 
-
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
@@ -301,7 +306,7 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void addAdditionalSaveData(CompoundTag p_21819_) {
         super.addAdditionalSaveData(p_21819_);
-        p_21819_.putInt("state",this.getSoulEaterEntityFlag());
+        p_21819_.putInt("state",this.getEntityFlag());
         p_21819_.putInt("color",this.getColor().getId());
         p_21819_.putInt("skin",this.getIdSkin());
     }
@@ -309,13 +314,13 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
     @Override
     public void readAdditionalSaveData(CompoundTag p_21815_) {
         super.readAdditionalSaveData(p_21815_);
-        this.setSoulEaterEntityFlag(p_21815_.getInt("state"));
+        this.setEntityFlag(p_21815_.getInt("state"));
         this.setColor(DyeColor.byId(p_21815_.getInt("color")));
         this.setIdSkin(p_21815_.getInt("skin"));
     }
 
     public boolean isFollowing(){
-        return this.getSoulEaterEntityFlag()==0;
+        return this.getEntityFlag()==0;
     }
 
     @Override
@@ -584,8 +589,8 @@ public class HarpyEntity extends TamableAnimal implements FlyingAnimal {
 
         private Vec3 getRandomAirPosition() {
             RandomSource random = this.harpy.getRandom();
-            Level world = this.harpy.level(); // class_1937
-            BlockPos currentPos = this.harpy.blockPosition(); // class_2338
+            Level world = this.harpy.level();
+            BlockPos currentPos = this.harpy.blockPosition();
             int groundHeight = world.getHeight(Heightmap.Types.WORLD_SURFACE, currentPos.getX(), currentPos.getZ());
             int altitudeRange = this.maxAltitude - this.minAltitude;
 
